@@ -1,0 +1,18 @@
+<package>
+  <description brief="compsci403_assignment6">
+
+     COMPSCI 403 Fall 2016 Assignment 6
+
+  </description>
+  <author>Joydeep Biswas</author>
+  <license>LGPLv3.0</license>
+  <review status="unreviewed" notes=""/>
+  <url></url>
+  <depend package="std_msgs"/>
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+  <depend package="visualization_msgs"/>
+
+</package>
+
+
