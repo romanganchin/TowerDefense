@@ -75,9 +75,9 @@ def GetFreePathService(point_cloud, r, current, desired):
 	is_obstacle = False
 
 	for magnitude in data.laser_scan.ranges:
-	for pointy_p in point_cloud
+	for point in point_cloud
 		# P = np.array([np.cos(angle), np.sin(angle)]) * magnitude
-		P = np.array([P.x, P.y])
+		P = np.array([point.x - current.x, point.y - current.x])
 		n = np.array([-P[1], P[0]])
 
 		# angle += data.laser_scan.angle_increment
