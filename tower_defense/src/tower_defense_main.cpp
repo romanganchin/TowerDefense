@@ -167,6 +167,7 @@ void InitMarkers() {
   plan_marker_.color.b = 0.0;
 }
 
+//this does not work! copied the code from previous assignment we need to use pointcloud2's everywhere or transform the pointcloud2 to pointcloud in the dpeth image call back
 bool ObstaclePointCloudService(
     tower_defense::ObstaclePointCloudSrv::Request& req,
     tower_defense::ObstaclePointCloudSrv::Response& res) {
@@ -215,6 +216,7 @@ bool ObstaclePointCloudService(
 //sensor_msgs/PointCloud2.msg
 void DepthImageCallback(const sensor_msgs::PointCloud2& image) {
   // Message for published 3D point clouds.
+  //this works!!!
   printf("we are reading the depth image");
   // sensor_msgs::PointCloud point_cloud;
   // point_cloud.header = image.header;
