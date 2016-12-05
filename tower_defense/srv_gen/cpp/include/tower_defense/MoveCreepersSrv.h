@@ -19,6 +19,8 @@
 #include "std_msgs/Bool.h"
 
 
+#include "geometry_msgs/Point.h"
+#include "std_msgs/Bool.h"
 
 namespace tower_defense
 {
@@ -55,12 +57,22 @@ struct MoveCreepersSrvResponse_ {
   typedef MoveCreepersSrvResponse_<ContainerAllocator> Type;
 
   MoveCreepersSrvResponse_()
+  : creeper_locations()
+  , reached_end()
   {
   }
 
   MoveCreepersSrvResponse_(const ContainerAllocator& _alloc)
+  : creeper_locations(_alloc)
+  , reached_end(_alloc)
   {
   }
+
+  typedef std::vector< ::geometry_msgs::Point_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point_<ContainerAllocator> >::other >  _creeper_locations_type;
+  std::vector< ::geometry_msgs::Point_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point_<ContainerAllocator> >::other >  creeper_locations;
+
+  typedef  ::std_msgs::Bool_<ContainerAllocator>  _reached_end_type;
+   ::std_msgs::Bool_<ContainerAllocator>  reached_end;
 
 
   typedef boost::shared_ptr< ::tower_defense::MoveCreepersSrvResponse_<ContainerAllocator> > Ptr;
@@ -143,12 +155,12 @@ template<class ContainerAllocator>
 struct MD5Sum< ::tower_defense::MoveCreepersSrvResponse_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "d41d8cd98f00b204e9800998ecf8427e";
+    return "6b405f1ffe0a958f76f1a9485c4fb14b";
   }
 
   static const char* value(const  ::tower_defense::MoveCreepersSrvResponse_<ContainerAllocator> &) { return value(); } 
-  static const uint64_t static_value1 = 0xd41d8cd98f00b204ULL;
-  static const uint64_t static_value2 = 0xe9800998ecf8427eULL;
+  static const uint64_t static_value1 = 0x6b405f1ffe0a958fULL;
+  static const uint64_t static_value2 = 0x76f1a9485c4fb14bULL;
 };
 
 template<class ContainerAllocator>
@@ -165,14 +177,26 @@ template<class ContainerAllocator>
 struct Definition< ::tower_defense::MoveCreepersSrvResponse_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "\n\
+    return "geometry_msgs/Point[] creeper_locations\n\
+std_msgs/Bool reached_end\n\
+\n\
+\n\
+================================================================================\n\
+MSG: geometry_msgs/Point\n\
+# This contains the position of a point in free space\n\
+float64 x\n\
+float64 y\n\
+float64 z\n\
+\n\
+================================================================================\n\
+MSG: std_msgs/Bool\n\
+bool data\n\
 ";
   }
 
   static const char* value(const  ::tower_defense::MoveCreepersSrvResponse_<ContainerAllocator> &) { return value(); } 
 };
 
-template<class ContainerAllocator> struct IsFixedSize< ::tower_defense::MoveCreepersSrvResponse_<ContainerAllocator> > : public TrueType {};
 } // namespace message_traits
 } // namespace ros
 
@@ -203,6 +227,8 @@ template<class ContainerAllocator> struct Serializer< ::tower_defense::MoveCreep
 {
   template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
   {
+    stream.next(m.creeper_locations);
+    stream.next(m.reached_end);
   }
 
   ROS_DECLARE_ALLINONE_SERIALIZER;
@@ -218,7 +244,7 @@ template<>
 struct MD5Sum<tower_defense::MoveCreepersSrv> {
   static const char* value() 
   {
-    return "45228e9cc51bf84db6a86e638e9ab23d";
+    return "f428434760fd966922080bb0858f16a6";
   }
 
   static const char* value(const tower_defense::MoveCreepersSrv&) { return value(); } 
@@ -238,7 +264,7 @@ template<class ContainerAllocator>
 struct MD5Sum<tower_defense::MoveCreepersSrvRequest_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "45228e9cc51bf84db6a86e638e9ab23d";
+    return "f428434760fd966922080bb0858f16a6";
   }
 
   static const char* value(const tower_defense::MoveCreepersSrvRequest_<ContainerAllocator> &) { return value(); } 
@@ -258,7 +284,7 @@ template<class ContainerAllocator>
 struct MD5Sum<tower_defense::MoveCreepersSrvResponse_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "45228e9cc51bf84db6a86e638e9ab23d";
+    return "f428434760fd966922080bb0858f16a6";
   }
 
   static const char* value(const tower_defense::MoveCreepersSrvResponse_<ContainerAllocator> &) { return value(); } 

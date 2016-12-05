@@ -11,7 +11,17 @@
     :reader point_cloud
     :initarg :point_cloud
     :type (cl:vector geometry_msgs-msg:Point)
-   :initform (cl:make-array 0 :element-type 'geometry_msgs-msg:Point :initial-element (cl:make-instance 'geometry_msgs-msg:Point))))
+   :initform (cl:make-array 0 :element-type 'geometry_msgs-msg:Point :initial-element (cl:make-instance 'geometry_msgs-msg:Point)))
+   (start
+    :reader start
+    :initarg :start
+    :type geometry_msgs-msg:Point
+    :initform (cl:make-instance 'geometry_msgs-msg:Point))
+   (end
+    :reader end
+    :initarg :end
+    :type geometry_msgs-msg:Point
+    :initform (cl:make-instance 'geometry_msgs-msg:Point)))
 )
 
 (cl:defclass MakePathSrv-request (<MakePathSrv-request>)
@@ -26,6 +36,16 @@
 (cl:defmethod point_cloud-val ((m <MakePathSrv-request>))
   (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader tower_defense-srv:point_cloud-val is deprecated.  Use tower_defense-srv:point_cloud instead.")
   (point_cloud m))
+
+(cl:ensure-generic-function 'start-val :lambda-list '(m))
+(cl:defmethod start-val ((m <MakePathSrv-request>))
+  (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader tower_defense-srv:start-val is deprecated.  Use tower_defense-srv:start instead.")
+  (start m))
+
+(cl:ensure-generic-function 'end-val :lambda-list '(m))
+(cl:defmethod end-val ((m <MakePathSrv-request>))
+  (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader tower_defense-srv:end-val is deprecated.  Use tower_defense-srv:end instead.")
+  (end m))
 (cl:defmethod roslisp-msg-protocol:serialize ((msg <MakePathSrv-request>) ostream)
   "Serializes a message object of type '<MakePathSrv-request>"
   (cl:let ((__ros_arr_len (cl:length (cl:slot-value msg 'point_cloud))))
@@ -35,6 +55,8 @@
     (cl:write-byte (cl:ldb (cl:byte 8 24) __ros_arr_len) ostream))
   (cl:map cl:nil #'(cl:lambda (ele) (roslisp-msg-protocol:serialize ele ostream))
    (cl:slot-value msg 'point_cloud))
+  (roslisp-msg-protocol:serialize (cl:slot-value msg 'start) ostream)
+  (roslisp-msg-protocol:serialize (cl:slot-value msg 'end) ostream)
 )
 (cl:defmethod roslisp-msg-protocol:deserialize ((msg <MakePathSrv-request>) istream)
   "Deserializes a message object of type '<MakePathSrv-request>"
@@ -48,6 +70,8 @@
     (cl:dotimes (i __ros_arr_len)
     (cl:setf (cl:aref vals i) (cl:make-instance 'geometry_msgs-msg:Point))
   (roslisp-msg-protocol:deserialize (cl:aref vals i) istream))))
+  (roslisp-msg-protocol:deserialize (cl:slot-value msg 'start) istream)
+  (roslisp-msg-protocol:deserialize (cl:slot-value msg 'end) istream)
   msg
 )
 (cl:defmethod roslisp-msg-protocol:ros-datatype ((msg (cl:eql '<MakePathSrv-request>)))
@@ -58,24 +82,28 @@
   "tower_defense/MakePathSrvRequest")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql '<MakePathSrv-request>)))
   "Returns md5sum for a message object of type '<MakePathSrv-request>"
-  "a18c0a487c22be5963d294c87be8c28d")
+  "e7e8c90999c49a7956a41be5569d7437")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql 'MakePathSrv-request)))
   "Returns md5sum for a message object of type 'MakePathSrv-request"
-  "a18c0a487c22be5963d294c87be8c28d")
+  "e7e8c90999c49a7956a41be5569d7437")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<MakePathSrv-request>)))
   "Returns full string definition for message of type '<MakePathSrv-request>"
-  (cl:format cl:nil "geometry_msgs/Point[] point_cloud~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%~%"))
+  (cl:format cl:nil "geometry_msgs/Point[] point_cloud~%geometry_msgs/Point start~%geometry_msgs/Point end~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%~%"))
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql 'MakePathSrv-request)))
   "Returns full string definition for message of type 'MakePathSrv-request"
-  (cl:format cl:nil "geometry_msgs/Point[] point_cloud~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%~%"))
+  (cl:format cl:nil "geometry_msgs/Point[] point_cloud~%geometry_msgs/Point start~%geometry_msgs/Point end~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%~%"))
 (cl:defmethod roslisp-msg-protocol:serialization-length ((msg <MakePathSrv-request>))
   (cl:+ 0
      4 (cl:reduce #'cl:+ (cl:slot-value msg 'point_cloud) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ (roslisp-msg-protocol:serialization-length ele))))
+     (roslisp-msg-protocol:serialization-length (cl:slot-value msg 'start))
+     (roslisp-msg-protocol:serialization-length (cl:slot-value msg 'end))
 ))
 (cl:defmethod roslisp-msg-protocol:ros-message-to-list ((msg <MakePathSrv-request>))
   "Converts a ROS message object to a list"
   (cl:list 'MakePathSrv-request
     (cl:cons ':point_cloud (point_cloud msg))
+    (cl:cons ':start (start msg))
+    (cl:cons ':end (end msg))
 ))
 ;//! \htmlinclude MakePathSrv-response.msg.html
 
@@ -131,10 +159,10 @@
   "tower_defense/MakePathSrvResponse")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql '<MakePathSrv-response>)))
   "Returns md5sum for a message object of type '<MakePathSrv-response>"
-  "a18c0a487c22be5963d294c87be8c28d")
+  "e7e8c90999c49a7956a41be5569d7437")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql 'MakePathSrv-response)))
   "Returns md5sum for a message object of type 'MakePathSrv-response"
-  "a18c0a487c22be5963d294c87be8c28d")
+  "e7e8c90999c49a7956a41be5569d7437")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<MakePathSrv-response>)))
   "Returns full string definition for message of type '<MakePathSrv-response>"
   (cl:format cl:nil "geometry_msgs/Point[] path~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%~%"))

@@ -6,6 +6,8 @@
                :std_msgs-msg
 )
   :components ((:file "_package")
+    (:file "HurtCreeperSrv" :depends-on ("_package_HurtCreeperSrv"))
+    (:file "_package_HurtCreeperSrv" :depends-on ("_package"))
     (:file "MakePathSrv" :depends-on ("_package_MakePathSrv"))
     (:file "_package_MakePathSrv" :depends-on ("_package"))
     (:file "MoveCreepersSrv" :depends-on ("_package_MoveCreepersSrv"))
