@@ -8,11 +8,11 @@ import struct
 import geometry_msgs.msg
 
 class HurtCreeperSrvRequest(genpy.Message):
-  _md5sum = "491570f64ed115783fbdd858e875f4c0"
+  _md5sum = "9405ec177ba9539e8cf06f85753d7611"
   _type = "tower_defense/HurtCreeperSrvRequest"
   _has_header = False #flag to mark the presence of a Header object
-  _full_text = """int32 damage
-geometry_msgs/Point32 location
+  _full_text = """int32[] damage
+geometry_msgs/Point32[] location
 
 ================================================================================
 MSG: geometry_msgs/Point32
@@ -28,7 +28,7 @@ float32 x
 float32 y
 float32 z"""
   __slots__ = ['damage','location']
-  _slot_types = ['int32','geometry_msgs/Point32']
+  _slot_types = ['int32[]','geometry_msgs/Point32[]']
 
   def __init__(self, *args, **kwds):
     """
@@ -48,12 +48,12 @@ float32 z"""
       super(HurtCreeperSrvRequest, self).__init__(*args, **kwds)
       #message fields cannot be None, assign default values for those that are
       if self.damage is None:
-        self.damage = 0
+        self.damage = []
       if self.location is None:
-        self.location = geometry_msgs.msg.Point32()
+        self.location = []
     else:
-      self.damage = 0
-      self.location = geometry_msgs.msg.Point32()
+      self.damage = []
+      self.location = []
 
   def _get_types(self):
     """
@@ -67,8 +67,15 @@ float32 z"""
     :param buff: buffer, ``StringIO``
     """
     try:
-      _x = self
-      buff.write(_struct_i3f.pack(_x.damage, _x.location.x, _x.location.y, _x.location.z))
+      length = len(self.damage)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%si'%length
+      buff.write(struct.pack(pattern, *self.damage))
+      length = len(self.location)
+      buff.write(_struct_I.pack(length))
+      for val1 in self.location:
+        _x = val1
+        buff.write(_struct_3f.pack(_x.x, _x.y, _x.z))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -79,12 +86,26 @@ float32 z"""
     """
     try:
       if self.location is None:
-        self.location = geometry_msgs.msg.Point32()
+        self.location = None
       end = 0
-      _x = self
       start = end
-      end += 16
-      (_x.damage, _x.location.x, _x.location.y, _x.location.z,) = _struct_i3f.unpack(str[start:end])
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%si'%length
+      start = end
+      end += struct.calcsize(pattern)
+      self.damage = struct.unpack(pattern, str[start:end])
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      self.location = []
+      for i in range(0, length):
+        val1 = geometry_msgs.msg.Point32()
+        _x = val1
+        start = end
+        end += 12
+        (_x.x, _x.y, _x.z,) = _struct_3f.unpack(str[start:end])
+        self.location.append(val1)
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill
@@ -97,8 +118,15 @@ float32 z"""
     :param numpy: numpy python module
     """
     try:
-      _x = self
-      buff.write(_struct_i3f.pack(_x.damage, _x.location.x, _x.location.y, _x.location.z))
+      length = len(self.damage)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%si'%length
+      buff.write(self.damage.tostring())
+      length = len(self.location)
+      buff.write(_struct_I.pack(length))
+      for val1 in self.location:
+        _x = val1
+        buff.write(_struct_3f.pack(_x.x, _x.y, _x.z))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -110,18 +138,32 @@ float32 z"""
     """
     try:
       if self.location is None:
-        self.location = geometry_msgs.msg.Point32()
+        self.location = None
       end = 0
-      _x = self
       start = end
-      end += 16
-      (_x.damage, _x.location.x, _x.location.y, _x.location.z,) = _struct_i3f.unpack(str[start:end])
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%si'%length
+      start = end
+      end += struct.calcsize(pattern)
+      self.damage = numpy.frombuffer(str[start:end], dtype=numpy.int32, count=length)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      self.location = []
+      for i in range(0, length):
+        val1 = geometry_msgs.msg.Point32()
+        _x = val1
+        start = end
+        end += 12
+        (_x.x, _x.y, _x.z,) = _struct_3f.unpack(str[start:end])
+        self.location.append(val1)
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill
 
 _struct_I = genpy.struct_I
-_struct_i3f = struct.Struct("<i3f")
+_struct_3f = struct.Struct("<3f")
 # This Python file uses the following encoding: utf-8
 """autogenerated by genpy from tower_defense/HurtCreeperSrvResponse.msg. Do not edit."""
 import sys
@@ -258,6 +300,6 @@ _struct_I = genpy.struct_I
 _struct_3d = struct.Struct("<3d")
 class HurtCreeperSrv(object):
   _type          = 'tower_defense/HurtCreeperSrv'
-  _md5sum = 'e47400e8ba47d59f499b301fbb82e275'
+  _md5sum = 'ec0465f99546c38cf031c50a5ac04f12'
   _request_class  = HurtCreeperSrvRequest
   _response_class = HurtCreeperSrvResponse

@@ -1,4 +1,4 @@
-int32 damage
-geometry_msgs/Point32 location
+int32[] damage
+geometry_msgs/Point32[] location
 ---
 geometry_msgs/Point[] creeper_locations

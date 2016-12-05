@@ -10,13 +10,13 @@
   ((damage
     :reader damage
     :initarg :damage
-    :type cl:integer
-    :initform 0)
+    :type (cl:vector cl:integer)
+   :initform (cl:make-array 0 :element-type 'cl:integer :initial-element 0))
    (location
     :reader location
     :initarg :location
-    :type geometry_msgs-msg:Point32
-    :initform (cl:make-instance 'geometry_msgs-msg:Point32)))
+    :type (cl:vector geometry_msgs-msg:Point32)
+   :initform (cl:make-array 0 :element-type 'geometry_msgs-msg:Point32 :initial-element (cl:make-instance 'geometry_msgs-msg:Point32))))
 )
 
 (cl:defclass HurtCreeperSrv-request (<HurtCreeperSrv-request>)
@@ -38,23 +38,52 @@
   (location m))
 (cl:defmethod roslisp-msg-protocol:serialize ((msg <HurtCreeperSrv-request>) ostream)
   "Serializes a message object of type '<HurtCreeperSrv-request>"
-  (cl:let* ((signed (cl:slot-value msg 'damage)) (unsigned (cl:if (cl:< signed 0) (cl:+ signed 4294967296) signed)))
+  (cl:let ((__ros_arr_len (cl:length (cl:slot-value msg 'damage))))
+    (cl:write-byte (cl:ldb (cl:byte 8 0) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 8) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 16) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 24) __ros_arr_len) ostream))
+  (cl:map cl:nil #'(cl:lambda (ele) (cl:let* ((signed ele) (unsigned (cl:if (cl:< signed 0) (cl:+ signed 4294967296) signed)))
     (cl:write-byte (cl:ldb (cl:byte 8 0) unsigned) ostream)
     (cl:write-byte (cl:ldb (cl:byte 8 8) unsigned) ostream)
     (cl:write-byte (cl:ldb (cl:byte 8 16) unsigned) ostream)
     (cl:write-byte (cl:ldb (cl:byte 8 24) unsigned) ostream)
-    )
-  (roslisp-msg-protocol:serialize (cl:slot-value msg 'location) ostream)
+    ))
+   (cl:slot-value msg 'damage))
+  (cl:let ((__ros_arr_len (cl:length (cl:slot-value msg 'location))))
+    (cl:write-byte (cl:ldb (cl:byte 8 0) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 8) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 16) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 24) __ros_arr_len) ostream))
+  (cl:map cl:nil #'(cl:lambda (ele) (roslisp-msg-protocol:serialize ele ostream))
+   (cl:slot-value msg 'location))
 )
 (cl:defmethod roslisp-msg-protocol:deserialize ((msg <HurtCreeperSrv-request>) istream)
   "Deserializes a message object of type '<HurtCreeperSrv-request>"
+  (cl:let ((__ros_arr_len 0))
+    (cl:setf (cl:ldb (cl:byte 8 0) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 8) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 16) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 24) __ros_arr_len) (cl:read-byte istream))
+  (cl:setf (cl:slot-value msg 'damage) (cl:make-array __ros_arr_len))
+  (cl:let ((vals (cl:slot-value msg 'damage)))
+    (cl:dotimes (i __ros_arr_len)
     (cl:let ((unsigned 0))
       (cl:setf (cl:ldb (cl:byte 8 0) unsigned) (cl:read-byte istream))
       (cl:setf (cl:ldb (cl:byte 8 8) unsigned) (cl:read-byte istream))
       (cl:setf (cl:ldb (cl:byte 8 16) unsigned) (cl:read-byte istream))
       (cl:setf (cl:ldb (cl:byte 8 24) unsigned) (cl:read-byte istream))
-      (cl:setf (cl:slot-value msg 'damage) (cl:if (cl:< unsigned 2147483648) unsigned (cl:- unsigned 4294967296))))
-  (roslisp-msg-protocol:deserialize (cl:slot-value msg 'location) istream)
+      (cl:setf (cl:aref vals i) (cl:if (cl:< unsigned 2147483648) unsigned (cl:- unsigned 4294967296)))))))
+  (cl:let ((__ros_arr_len 0))
+    (cl:setf (cl:ldb (cl:byte 8 0) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 8) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 16) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 24) __ros_arr_len) (cl:read-byte istream))
+  (cl:setf (cl:slot-value msg 'location) (cl:make-array __ros_arr_len))
+  (cl:let ((vals (cl:slot-value msg 'location)))
+    (cl:dotimes (i __ros_arr_len)
+    (cl:setf (cl:aref vals i) (cl:make-instance 'geometry_msgs-msg:Point32))
+  (roslisp-msg-protocol:deserialize (cl:aref vals i) istream))))
   msg
 )
 (cl:defmethod roslisp-msg-protocol:ros-datatype ((msg (cl:eql '<HurtCreeperSrv-request>)))
@@ -65,20 +94,20 @@
   "tower_defense/HurtCreeperSrvRequest")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql '<HurtCreeperSrv-request>)))
   "Returns md5sum for a message object of type '<HurtCreeperSrv-request>"
-  "e47400e8ba47d59f499b301fbb82e275")
+  "ec0465f99546c38cf031c50a5ac04f12")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql 'HurtCreeperSrv-request)))
   "Returns md5sum for a message object of type 'HurtCreeperSrv-request"
-  "e47400e8ba47d59f499b301fbb82e275")
+  "ec0465f99546c38cf031c50a5ac04f12")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<HurtCreeperSrv-request>)))
   "Returns full string definition for message of type '<HurtCreeperSrv-request>"
-  (cl:format cl:nil "int32 damage~%geometry_msgs/Point32 location~%~%================================================================================~%MSG: geometry_msgs/Point32~%# This contains the position of a point in free space(with 32 bits of precision).~%# It is recommeded to use Point wherever possible instead of Point32.  ~%# ~%# This recommendation is to promote interoperability.  ~%#~%# This message is designed to take up less space when sending~%# lots of points at once, as in the case of a PointCloud.  ~%~%float32 x~%float32 y~%float32 z~%~%"))
+  (cl:format cl:nil "int32[] damage~%geometry_msgs/Point32[] location~%~%================================================================================~%MSG: geometry_msgs/Point32~%# This contains the position of a point in free space(with 32 bits of precision).~%# It is recommeded to use Point wherever possible instead of Point32.  ~%# ~%# This recommendation is to promote interoperability.  ~%#~%# This message is designed to take up less space when sending~%# lots of points at once, as in the case of a PointCloud.  ~%~%float32 x~%float32 y~%float32 z~%~%"))
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql 'HurtCreeperSrv-request)))
   "Returns full string definition for message of type 'HurtCreeperSrv-request"
-  (cl:format cl:nil "int32 damage~%geometry_msgs/Point32 location~%~%================================================================================~%MSG: geometry_msgs/Point32~%# This contains the position of a point in free space(with 32 bits of precision).~%# It is recommeded to use Point wherever possible instead of Point32.  ~%# ~%# This recommendation is to promote interoperability.  ~%#~%# This message is designed to take up less space when sending~%# lots of points at once, as in the case of a PointCloud.  ~%~%float32 x~%float32 y~%float32 z~%~%"))
+  (cl:format cl:nil "int32[] damage~%geometry_msgs/Point32[] location~%~%================================================================================~%MSG: geometry_msgs/Point32~%# This contains the position of a point in free space(with 32 bits of precision).~%# It is recommeded to use Point wherever possible instead of Point32.  ~%# ~%# This recommendation is to promote interoperability.  ~%#~%# This message is designed to take up less space when sending~%# lots of points at once, as in the case of a PointCloud.  ~%~%float32 x~%float32 y~%float32 z~%~%"))
 (cl:defmethod roslisp-msg-protocol:serialization-length ((msg <HurtCreeperSrv-request>))
   (cl:+ 0
-     4
-     (roslisp-msg-protocol:serialization-length (cl:slot-value msg 'location))
+     4 (cl:reduce #'cl:+ (cl:slot-value msg 'damage) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ 4)))
+     4 (cl:reduce #'cl:+ (cl:slot-value msg 'location) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ (roslisp-msg-protocol:serialization-length ele))))
 ))
 (cl:defmethod roslisp-msg-protocol:ros-message-to-list ((msg <HurtCreeperSrv-request>))
   "Converts a ROS message object to a list"
@@ -140,10 +169,10 @@
   "tower_defense/HurtCreeperSrvResponse")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql '<HurtCreeperSrv-response>)))
   "Returns md5sum for a message object of type '<HurtCreeperSrv-response>"
-  "e47400e8ba47d59f499b301fbb82e275")
+  "ec0465f99546c38cf031c50a5ac04f12")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql 'HurtCreeperSrv-response)))
   "Returns md5sum for a message object of type 'HurtCreeperSrv-response"
-  "e47400e8ba47d59f499b301fbb82e275")
+  "ec0465f99546c38cf031c50a5ac04f12")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<HurtCreeperSrv-response>)))
   "Returns full string definition for message of type '<HurtCreeperSrv-response>"
   (cl:format cl:nil "geometry_msgs/Point[] creeper_locations~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%~%"))

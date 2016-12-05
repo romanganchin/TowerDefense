@@ -28,22 +28,22 @@ struct HurtCreeperSrvRequest_ {
   typedef HurtCreeperSrvRequest_<ContainerAllocator> Type;
 
   HurtCreeperSrvRequest_()
-  : damage(0)
+  : damage()
   , location()
   {
   }
 
   HurtCreeperSrvRequest_(const ContainerAllocator& _alloc)
-  : damage(0)
+  : damage(_alloc)
   , location(_alloc)
   {
   }
 
-  typedef int32_t _damage_type;
-  int32_t damage;
+  typedef std::vector<int32_t, typename ContainerAllocator::template rebind<int32_t>::other >  _damage_type;
+  std::vector<int32_t, typename ContainerAllocator::template rebind<int32_t>::other >  damage;
 
-  typedef  ::geometry_msgs::Point32_<ContainerAllocator>  _location_type;
-   ::geometry_msgs::Point32_<ContainerAllocator>  location;
+  typedef std::vector< ::geometry_msgs::Point32_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point32_<ContainerAllocator> >::other >  _location_type;
+  std::vector< ::geometry_msgs::Point32_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point32_<ContainerAllocator> >::other >  location;
 
 
   typedef boost::shared_ptr< ::tower_defense::HurtCreeperSrvRequest_<ContainerAllocator> > Ptr;
@@ -106,12 +106,12 @@ template<class ContainerAllocator>
 struct MD5Sum< ::tower_defense::HurtCreeperSrvRequest_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "491570f64ed115783fbdd858e875f4c0";
+    return "9405ec177ba9539e8cf06f85753d7611";
   }
 
   static const char* value(const  ::tower_defense::HurtCreeperSrvRequest_<ContainerAllocator> &) { return value(); } 
-  static const uint64_t static_value1 = 0x491570f64ed11578ULL;
-  static const uint64_t static_value2 = 0x3fbdd858e875f4c0ULL;
+  static const uint64_t static_value1 = 0x9405ec177ba9539eULL;
+  static const uint64_t static_value2 = 0x8cf06f85753d7611ULL;
 };
 
 template<class ContainerAllocator>
@@ -128,8 +128,8 @@ template<class ContainerAllocator>
 struct Definition< ::tower_defense::HurtCreeperSrvRequest_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "int32 damage\n\
-geometry_msgs/Point32 location\n\
+    return "int32[] damage\n\
+geometry_msgs/Point32[] location\n\
 \n\
 ================================================================================\n\
 MSG: geometry_msgs/Point32\n\
@@ -150,7 +150,6 @@ float32 z\n\
   static const char* value(const  ::tower_defense::HurtCreeperSrvRequest_<ContainerAllocator> &) { return value(); } 
 };
 
-template<class ContainerAllocator> struct IsFixedSize< ::tower_defense::HurtCreeperSrvRequest_<ContainerAllocator> > : public TrueType {};
 } // namespace message_traits
 } // namespace ros
 
@@ -249,7 +248,7 @@ template<>
 struct MD5Sum<tower_defense::HurtCreeperSrv> {
   static const char* value() 
   {
-    return "e47400e8ba47d59f499b301fbb82e275";
+    return "ec0465f99546c38cf031c50a5ac04f12";
   }
 
   static const char* value(const tower_defense::HurtCreeperSrv&) { return value(); } 
@@ -269,7 +268,7 @@ template<class ContainerAllocator>
 struct MD5Sum<tower_defense::HurtCreeperSrvRequest_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "e47400e8ba47d59f499b301fbb82e275";
+    return "ec0465f99546c38cf031c50a5ac04f12";
   }
 
   static const char* value(const tower_defense::HurtCreeperSrvRequest_<ContainerAllocator> &) { return value(); } 
@@ -289,7 +288,7 @@ template<class ContainerAllocator>
 struct MD5Sum<tower_defense::HurtCreeperSrvResponse_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "e47400e8ba47d59f499b301fbb82e275";
+    return "ec0465f99546c38cf031c50a5ac04f12";
   }
 
   static const char* value(const tower_defense::HurtCreeperSrvResponse_<ContainerAllocator> &) { return value(); } 

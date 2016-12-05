@@ -65,11 +65,11 @@ def ExtendNode(P, q):
 
 	return q_near_index, q_new
 
-def GetFreePathService(point_cloud, r, current, desired):
+def CheckExtension(point_cloud, r, current, desired):
 	V     = np.array([desired.x + current.x, desired.y + current.y])
 	V_hat = V / V.dot(V)
 
-	for point in point_cloud
+	for point in point_cloud:
 		P = np.array([point.x + current.x, point.y + current.x])
 		n = np.array([-P[1], P[0]])
 
@@ -184,24 +184,17 @@ def MoveCreepersService(req):
 def HurtCreeperService(req):
 	global creepers
 
-	damage   = req.damage
-	location = req.location
+	l_to_d = {l: d for l, d in zip(req.location, req.damage)}
 
 	for i in range(len(creepers)):
-		if path[creepers[i][1]] == location:
-			creepers[i][0] -= damage
+		if path[creepers[i][1]] in l_to_d:
+			creepers[i][0] -= l_to_d[path[creepers[i][1]]]
 
-			if creepers[i][0] <= 0:
-				if i == len(creepers):
-					creepers = creepers[:i]
-				else:
-					creepers = creepers[:i] + creepers[i+1:]
-
-			return HurtCreeperSrvResponse([path[c[1]] for c in creepers])
+	creepers = [c for c in creepers if c[0] > 0]
 
 	#if you get here that means that the location given wasn't the location
 	#of any of the creeps
-	assert False
+	return HurtCreeperSrvResponse([path[c[1]] for c in creepers])
 
 if __name__ == "__main__":
   rospy.init_node('creepers')
