@@ -66,32 +66,19 @@ def ExtendNode(P, q):
 	return q_near_index, q_new
 
 def GetFreePathService(point_cloud, r, current, desired):
-	# Laser scan.
-	laser_scan = data.laser_scan
-	# Desired velocity vector.
-	V = np.array([desired.x, desired.y])
-	angle = data.laser_scan.angle_min
-	free_path_length = float('inf')
-	is_obstacle = False
+	V     = np.array([desired.x + current.x, desired.y + current.y])
+	V_hat = V / V.dot(V)
 
-	for magnitude in data.laser_scan.ranges:
 	for point in point_cloud
-		# P = np.array([np.cos(angle), np.sin(angle)]) * magnitude
-		P = np.array([point.x - current.x, point.y - current.x])
+		P = np.array([point.x + current.x, point.y + current.x])
 		n = np.array([-P[1], P[0]])
 
-		# angle += data.laser_scan.angle_increment
+		projection = V + ((P-V).dot(V_hat)) * V_hat
 
-		projection = (P.dot(V) / V.dot(V)) * V
-		delta      = np.sqrt(r**2 - P.dot(n)**2)
-		distance   = np.sqrt(projection.dot(projection)) - delta
+		if (np.sqrt(projection.dot(projection)) <= r):
+			return False
 
-		n_projection = (P.dot(n) / n.dot(n)) * n
-
-		if (np.sqrt(n_projection.dot(n_projection)) <= r):
-			is_obstacle = True
-		if distance < free_path_length:
-			free_path_length = distance
+	return True
 
 #returns a list of points, which are the steps the creepers take at each timestep
 #the path coords should only be used by this node, but might be useful for something
@@ -113,7 +100,7 @@ def MakePathService(req):
 		q_i, q_new  = ExtendNode(raw_points, q_rand)
 		q_near      = raw_points[q_i]
 
-		while not CheckExtension(q_near, q_new):
+		while not CheckExtension(p, creeper_radius, q_near, q_new):
 			q_rand      = RandomConfig(goal)
 			q_i, q_new  = ExtendNode(raw_points, q_rand)
 			q_near      = raw_points[q_i]
@@ -126,23 +113,39 @@ def MakePathService(req):
 		current_point = q_new
 
 	rrt.insert(0, rrt[-1])
-	rrt = rrt[:-1]
+	rrt            = rrt[:-1]
 	rrt[0].parent += 1
 
 	for rr in rrt[2:]:
 		rr.parent += 1
 
-	i = 0
-	path = []
+	i        = 0
+	raw_path = []
 	while not i == -1:
-		path.append(rrt[i].location)
-		plan_marker_.points.append(rrt[i].location)
+		raw_path.append(rrt[i].location)
 		i = rrt[i].parent
-		plan_marker_.points.append(rrt[i].location)
 
-	plan_marker_.points = plan_marker_.points[:-2]
-	markers.markers.append(plan_marker_)
-	markers_publisher_.publish(markers)
+	raw_path = reversed(raw_path)
+	path     = []
+	for i in range(len(raw_path)-1):
+		path.append(raw_path[i])
+
+		current_start = np.array([raw_path[i].x, raw_path[i].y])
+		current_end   = np.array([raw_path[i+1].x, raw_path[i+1].y])
+		path_vector   = current_end - current_start
+		hat_vector    = path_vector / path_vector.dot(path_vector)
+		current_len   = path_step_size
+		current_max   = path_vector.dot(path_vector)
+
+		while current_len < current_max:
+			new_point = current_start + hat_vector * current_len
+			p         = Point32()
+			p.x       = new_point[0]
+			p.y       = new_point[1]
+
+			path.append(p)
+			current_len += path_step_size
+
 
 	return MakePathServiceResponse(path)
 
