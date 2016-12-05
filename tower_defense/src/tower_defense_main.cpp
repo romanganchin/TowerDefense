@@ -10,18 +10,18 @@
 #include <nav_msgs/Odometry.h>
 #include <visualization_msgs/MarkerArray.h>
 
-#include "tower_defense/RandomConfigSrv.h"
-#include "tower_defense/ExtendNodeSrv.h"
-#include "tower_defense/CheckExtensionSrv.h"
-#include "tower_defense/BuildRRTSrv.h"
-#include "tower_defense/RRTPlanSrv.h"
+// #include "tower_defense/RandomConfigSrv.h"
+// #include "tower_defense/ExtendNodeSrv.h"
+// #include "tower_defense/CheckExtensionSrv.h"
+// #include "tower_defense/BuildRRTSrv.h"
+// #include "tower_defense/RRTPlanSrv.h"
 
-using tower_defense::RandomConfigSrv;
-using tower_defense::ExtendNodeSrv;
-using tower_defense::CheckExtensionSrv;
-using tower_defense::BuildRRTSrv;
-using tower_defense::RRTPlanSrv;
-using tower_defense::RRTNode;
+// using tower_defense::RandomConfigSrv;
+// using tower_defense::ExtendNodeSrv;
+// using tower_defense::CheckExtensionSrv;
+// using tower_defense::BuildRRTSrv;
+// using tower_defense::RRTPlanSrv;
+// using tower_defense::RRTNode;
 
 using Eigen::Vector2f;
 using geometry_msgs::Point;
@@ -131,65 +131,65 @@ void InitMarkers() {
   plan_marker_.color.b = 0.0;
 }
 
-bool RandomConfigService(
-    RandomConfigSrv::Request& req,
-    RandomConfigSrv::Response& res) {
-  return true;
-}
+// bool RandomConfigService(
+//     RandomConfigSrv::Request& req,
+//     RandomConfigSrv::Response& res) {
+//   return true;
+// }
 
-bool ExtendNodeService(
-    ExtendNodeSrv::Request& req,
-    ExtendNodeSrv::Response& res) {
-  return true;
-}
+// bool ExtendNodeService(
+//     ExtendNodeSrv::Request& req,
+//     ExtendNodeSrv::Response& res) {
+//   return true;
+// }
 
-bool CheckExtensionService(
-    CheckExtensionSrv::Request& req,
-    CheckExtensionSrv::Response& res) {
-  return true;
-}
+// bool CheckExtensionService(
+//     CheckExtensionSrv::Request& req,
+//     CheckExtensionSrv::Response& res) {
+//   return true;
+// }
 
-bool BuildRRTService(
-    BuildRRTSrv::Request& req,
-    BuildRRTSrv::Response& res) {
+// bool BuildRRTService(
+//     BuildRRTSrv::Request& req,
+//     BuildRRTSrv::Response& res) {
 
-  // Sample code to visualize the RRT
-  MarkerArray markers;
-  markers.markers.clear();
-  // Draw maze:
-  // for (size_t i = 0; i < map.size(); ++i) {
-  //   DrawLine(map[i].p1, map[i].p2, &map_marker_);
-  //   DrawLine(map[i].p1, map[i].p2, &plan_marker_);
-  // }
-  //
-  // Draw q_rand:
-  // DrawPoint(q_rand, &qrand_marker_);
-  //
-  // Draw the tree.
-  // ...
-  //
-  // Publish all the markers.
-  markers.markers.push_back(vertices_marker_);
-  markers.markers.push_back(qrand_marker_);
-  markers.markers.push_back(edges_marker_);
-  markers.markers.push_back(map_marker_);
-  markers.markers.push_back(plan_marker_);
-  markers_publisher_.publish(markers);
+//   // Sample code to visualize the RRT
+//   MarkerArray markers;
+//   markers.markers.clear();
+//   // Draw maze:
+//   // for (size_t i = 0; i < map.size(); ++i) {
+//   //   DrawLine(map[i].p1, map[i].p2, &map_marker_);
+//   //   DrawLine(map[i].p1, map[i].p2, &plan_marker_);
+//   // }
+//   //
+//   // Draw q_rand:
+//   // DrawPoint(q_rand, &qrand_marker_);
+//   //
+//   // Draw the tree.
+//   // ...
+//   //
+//   // Publish all the markers.
+//   markers.markers.push_back(vertices_marker_);
+//   markers.markers.push_back(qrand_marker_);
+//   markers.markers.push_back(edges_marker_);
+//   markers.markers.push_back(map_marker_);
+//   markers.markers.push_back(plan_marker_);
+//   markers_publisher_.publish(markers);
 
-  return true;
-}
+//   return true;
+// }
 
-bool RRTPlanService(
-    RRTPlanSrv::Request& req,
-    RRTPlanSrv::Response& res) {
-  return true;
-}
+// bool RRTPlanService(
+//     RRTPlanSrv::Request& req,
+//     RRTPlanSrv::Response& res) {
+//   return true;
+// }
 
-bool RRTPlanBonusService(
-    RRTPlanSrv::Request& req,
-    RRTPlanSrv::Response& res) {
-  return true;
-}
+// bool RRTPlanBonusService(
+//     RRTPlanSrv::Request& req,
+//     RRTPlanSrv::Response& res) {
+//   return true;
+// }
 
 int main(int argc, char **argv) {
   InitMarkers();
@@ -197,27 +197,27 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "compsci403_assignment6");
   ros::NodeHandle n;
 
-  markers_publisher_ = n.advertise<visualization_msgs::MarkerArray>(
-      "/COMPSCI403/RRT_Display", 10);
+  // markers_publisher_ = n.advertise<visualization_msgs::MarkerArray>(
+  //     "/COMPSCI403/RRT_Display", 10);
 
-  ros::ServiceServer server1 = n.advertiseService(
-      "COMPSCI403/RandomConfig",
-      RandomConfigService);
-  ros::ServiceServer server2 = n.advertiseService(
-      "COMPSCI403/ExtendNode",
-      ExtendNodeService);
-  ros::ServiceServer server3 = n.advertiseService(
-      "COMPSCI403/CheckExtension",
-      CheckExtensionService);
-  ros::ServiceServer server4 = n.advertiseService(
-      "COMPSCI403/BuildRRT",
-      BuildRRTService);
-  ros::ServiceServer server5 = n.advertiseService(
-      "COMPSCI403/RRTPlan",
-      RRTPlanService);
-  ros::ServiceServer server6 = n.advertiseService(
-      "COMPSCI403/RRTPlanBonus",
-      RRTPlanBonusService);
+  // ros::ServiceServer server1 = n.advertiseService(
+  //     "COMPSCI403/RandomConfig",
+  //     RandomConfigService);
+  // ros::ServiceServer server2 = n.advertiseService(
+  //     "COMPSCI403/ExtendNode",
+  //     ExtendNodeService);
+  // ros::ServiceServer server3 = n.advertiseService(
+  //     "COMPSCI403/CheckExtension",
+  //     CheckExtensionService);
+  // ros::ServiceServer server4 = n.advertiseService(
+  //     "COMPSCI403/BuildRRT",
+  //     BuildRRTService);
+  // ros::ServiceServer server5 = n.advertiseService(
+  //     "COMPSCI403/RRTPlan",
+  //     RRTPlanService);
+  // ros::ServiceServer server6 = n.advertiseService(
+  //     "COMPSCI403/RRTPlanBonus",
+  //     RRTPlanBonusService);
 
   ros::spin();
   return 0;
