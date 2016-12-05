@@ -12,6 +12,7 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/Image.h>
+#include <sensor_msgs/PointCloud2.h>
 
 #include "tower_defense/ObstaclePointCloudSrv.h"
 // #include "tower_defense/RandomConfigSrv.h"
@@ -211,34 +212,34 @@ bool ObstaclePointCloudService(
   //printf("Hello, point cloud %d\n", (int) j);
   return true;
 }
-
-void DepthImageCallback(const sensor_msgs::Image& image) {
+//sensor_msgs/PointCloud2.msg
+void DepthImageCallback(const sensor_msgs::PointCloud2& image) {
   // Message for published 3D point clouds.
   printf("we are reading the depth image");
-  sensor_msgs::PointCloud point_cloud;
-  point_cloud.header = image.header;
+  // sensor_msgs::PointCloud point_cloud;
+  // point_cloud.header = image.header;
 
-  for (unsigned int y = 0; y < image.height; ++y) {
-    for (unsigned int x = 0; x < image.width; ++x) {
-      uint16_t byte0 = image.data[2 * (x + y * image.width) + 0];
-      uint16_t byte1 = image.data[2 * (x + y * image.width) + 1];
-      if (!image.is_bigendian) {
-        std::swap(byte0, byte1);
-      }
-      // Combine the two bytes to form a 16 bit value, and disregard the
-      // most significant 4 bits to extract the lowest 12 bits.
-      const uint16_t raw_depth = ((byte0 << 8) | byte1) & 0x7FF;
-      // Reconstruct 3D point from x, y, raw_depth.
-      geometry_msgs::Point32 point;
-      // Modify the following lines of code to do the right thing, with the
-      // correct parameters.
-      point.z = 1/(a+(b*raw_depth));
-      point.x = ((x-px)/fx)*point.z;
-      point.y = ((y-py)/fy)*point.z;
-      point_cloud.points.push_back(point);
-    }
-  }
-  point_cloud_publisher_.publish(point_cloud);
+  // for (unsigned int y = 0; y < image.height; ++y) {
+  //   for (unsigned int x = 0; x < image.width; ++x) {
+  //     uint16_t byte0 = image.data[2 * (x + y * image.width) + 0];
+  //     uint16_t byte1 = image.data[2 * (x + y * image.width) + 1];
+  //     if (!image.is_bigendian) {
+  //       std::swap(byte0, byte1);
+  //     }
+  //     // Combine the two bytes to form a 16 bit value, and disregard the
+  //     // most significant 4 bits to extract the lowest 12 bits.
+  //     const uint16_t raw_depth = ((byte0 << 8) | byte1) & 0x7FF;
+  //     // Reconstruct 3D point from x, y, raw_depth.
+  //     geometry_msgs::Point32 point;
+  //     // Modify the following lines of code to do the right thing, with the
+  //     // correct parameters.
+  //     point.z = 1/(a+(b*raw_depth));
+  //     point.x = ((x-px)/fx)*point.z;
+  //     point.y = ((y-py)/fy)*point.z;
+  //     point_cloud.points.push_back(point);
+  //   }
+  // }
+  point_cloud_publisher_.publish(image);
 }
 
 int main(int argc, char **argv) {
@@ -251,10 +252,10 @@ int main(int argc, char **argv) {
     n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/FilteredPointCloud", 1);
 
   point_cloud_publisher_ =
-    n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/PointCloud", 1);
+    n.advertise<sensor_msgs::PointCloud2>("/COMPSCI403/PointCloud", 1);
 
   ros::Subscriber depth_image_subscriber =
-    n.subscribe("/COMPSCI403/DepthImage", 1, DepthImageCallback);
+    n.subscribe("/camera/depth_registered/points", 1, DepthImageCallback);
 
   // markers_publisher_ = n.advertise<visualization_msgs::MarkerArray>(
   //     "/COMPSCI403/RRT_Display", 10);
