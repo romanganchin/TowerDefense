@@ -238,9 +238,9 @@ void DepthImageCallback(const sensor_msgs::PointCloud2& image) {
   //     point.z = 1/(a+(b*raw_depth));
   //     point.x = ((x-px)/fx)*point.z;
   //     point.y = ((y-py)/fy)*point.z;
-      point_cloud.points.push_back(point);
-    }
-  }
+  //     point_cloud.points.push_back(point);
+  //   }
+  // }
   point_cloud_publisher_.publish(point_cloud);
 }
 
