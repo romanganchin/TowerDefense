@@ -217,9 +217,9 @@ bool ObstaclePointCloudService(
 void DepthImageCallback(const sensor_msgs::PointCloud2& image) {
   // Message for published 3D point clouds.
   //this works!!!
-  printf("we are reading the depth image");
-  // sensor_msgs::PointCloud point_cloud;
-  // point_cloud.header = image.header;
+  //printf("we are reading the depth image");
+  sensor_msgs::PointCloud point_cloud;
+  point_cloud.header = image.header;
 
   // for (unsigned int y = 0; y < image.height; ++y) {
   //   for (unsigned int x = 0; x < image.width; ++x) {
@@ -238,10 +238,10 @@ void DepthImageCallback(const sensor_msgs::PointCloud2& image) {
   //     point.z = 1/(a+(b*raw_depth));
   //     point.x = ((x-px)/fx)*point.z;
   //     point.y = ((y-py)/fy)*point.z;
-  //     point_cloud.points.push_back(point);
-  //   }
-  // }
-  point_cloud_publisher_.publish(image);
+      point_cloud.points.push_back(point);
+    }
+  }
+  point_cloud_publisher_.publish(point_cloud);
 }
 
 int main(int argc, char **argv) {
@@ -256,6 +256,7 @@ int main(int argc, char **argv) {
   point_cloud_publisher_ =
     n.advertise<sensor_msgs::PointCloud2>("/COMPSCI403/PointCloud", 1);
 
+  //this works!
   ros::Subscriber depth_image_subscriber =
     n.subscribe("/camera/depth_registered/points", 1, DepthImageCallback);
 
