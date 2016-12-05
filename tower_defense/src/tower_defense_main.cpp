@@ -7,9 +7,13 @@
 
 #include <eigen3/Eigen/Dense>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/Point32.h>
 #include <nav_msgs/Odometry.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/Image.h>
 
+#include "tower_defense/ObstaclePointCloudSrv.h"
 // #include "tower_defense/RandomConfigSrv.h"
 // #include "tower_defense/ExtendNodeSrv.h"
 // #include "tower_defense/CheckExtensionSrv.h"
@@ -23,8 +27,11 @@
 // using tower_defense::RRTPlanSrv;
 // using tower_defense::RRTNode;
 
+using Eigen::Matrix3f;
+using Eigen::Vector3f;
 using Eigen::Vector2f;
 using geometry_msgs::Point;
+using geometry_msgs::Point32;
 using std::fabs;
 using std::max;
 using std::atan2;
@@ -36,12 +43,40 @@ using visualization_msgs::MarkerArray;
 // Publisher for marker messages.
 ros::Publisher markers_publisher_;
 
+//Publisher for filtered point cloud
+ros::Publisher filtered_point_cloud_publisher_;
+
+// Publisher for 3D point clouds.
+ros::Publisher point_cloud_publisher_;
+
+//camera intrinsics
+float fx = 588.446;
+float fy = -564.227;
+float px = 320;
+float py = 240;
+float a = 3.008;
+float b = -0.002745;
+
 // Markers for visualization.
 Marker vertices_marker_;
 Marker qrand_marker_;
 Marker edges_marker_;
 Marker map_marker_;
 Marker plan_marker_;
+
+// Helper function to convert ROS Point32 to Eigen Vectors.
+Vector3f ConvertPointToVector(const Point32& point) {
+  return Vector3f(point.x, point.y, point.z);
+}
+
+// Helper function to convert Eigen Vectors to ROS Point32.
+Point32 ConvertVectorToPoint(const Vector3f& vector) {
+  Point32 point;
+  point.x = vector.x();
+  point.y = vector.y();
+  point.z = vector.z();
+  return point;
+}
 
 // Return a random value between min and max.
 float RandomValue(const float min, const float max) {
@@ -131,93 +166,98 @@ void InitMarkers() {
   plan_marker_.color.b = 0.0;
 }
 
-// bool RandomConfigService(
-//     RandomConfigSrv::Request& req,
-//     RandomConfigSrv::Response& res) {
-//   return true;
-// }
+bool ObstaclePointCloudService(
+    tower_defense::ObstaclePointCloudSrv::Request& req,
+    tower_defense::ObstaclePointCloudSrv::Response& res) {
+  Matrix3f R;
 
-// bool ExtendNodeService(
-//     ExtendNodeSrv::Request& req,
-//     ExtendNodeSrv::Response& res) {
-//   return true;
-// }
+  for (int row = 0; row < 3; ++row) {
+    for (int col = 0; col < 3; ++col) {
+      R(row, col) = req.R[col * 3 + row];
+    }
+  }
+  const Vector3f T(req.T.x, req.T.y, req.T.z);
 
-// bool CheckExtensionService(
-//     CheckExtensionSrv::Request& req,
-//     CheckExtensionSrv::Response& res) {
-//   return true;
-// }
+  vector<Vector3f> filtered_point_cloud(req.P.size());
+  // Copy over all the points.
+  size_t j = 0;
+  vector<Vector3f> point_cloud(req.P.size());
+  for (size_t i = 0; i < point_cloud.size(); ++i) {
+    point_cloud[i] = ConvertPointToVector(req.P[i]);
+    point_cloud[i] = R * (point_cloud[i]) + T;
+    if(point_cloud[i].z() > .01){
+      filtered_point_cloud[j] = point_cloud[i];
+      j++;
+    }
+  }
 
-// bool BuildRRTService(
-//     BuildRRTSrv::Request& req,
-//     BuildRRTSrv::Response& res) {
+  filtered_point_cloud.resize(j); 
+    
+  // Write code here to transform the input point cloud from the Kinect reference frame to the
+  // robot's reference frame. Then filter out the points corresponding to ground
+  // or heights larger than the height of the robot
+ 
+  res.P_prime.resize(j);
+   
+  sensor_msgs::PointCloud publish_cloud;
+  publish_cloud.header.frame_id = "base_link";
+  publish_cloud.points.resize(j);
+  for (size_t i = 0; i < j; ++i) {
+    res.P_prime[i] = ConvertVectorToPoint(filtered_point_cloud[i]);
+    publish_cloud.points[i] = res.P_prime[i];
+  }
+  //we might want to publish res.P_prime instead because 
+  filtered_point_cloud_publisher_.publish(publish_cloud);
+  //printf("Hello, point cloud %d\n", (int) j);
+  return true;
+}
 
-//   // Sample code to visualize the RRT
-//   MarkerArray markers;
-//   markers.markers.clear();
-//   // Draw maze:
-//   // for (size_t i = 0; i < map.size(); ++i) {
-//   //   DrawLine(map[i].p1, map[i].p2, &map_marker_);
-//   //   DrawLine(map[i].p1, map[i].p2, &plan_marker_);
-//   // }
-//   //
-//   // Draw q_rand:
-//   // DrawPoint(q_rand, &qrand_marker_);
-//   //
-//   // Draw the tree.
-//   // ...
-//   //
-//   // Publish all the markers.
-//   markers.markers.push_back(vertices_marker_);
-//   markers.markers.push_back(qrand_marker_);
-//   markers.markers.push_back(edges_marker_);
-//   markers.markers.push_back(map_marker_);
-//   markers.markers.push_back(plan_marker_);
-//   markers_publisher_.publish(markers);
+void DepthImageCallback(const sensor_msgs::Image& image) {
+  // Message for published 3D point clouds.
+  printf("we are reading the depth image");
+  sensor_msgs::PointCloud point_cloud;
+  point_cloud.header = image.header;
 
-//   return true;
-// }
-
-// bool RRTPlanService(
-//     RRTPlanSrv::Request& req,
-//     RRTPlanSrv::Response& res) {
-//   return true;
-// }
-
-// bool RRTPlanBonusService(
-//     RRTPlanSrv::Request& req,
-//     RRTPlanSrv::Response& res) {
-//   return true;
-// }
+  for (unsigned int y = 0; y < image.height; ++y) {
+    for (unsigned int x = 0; x < image.width; ++x) {
+      uint16_t byte0 = image.data[2 * (x + y * image.width) + 0];
+      uint16_t byte1 = image.data[2 * (x + y * image.width) + 1];
+      if (!image.is_bigendian) {
+        std::swap(byte0, byte1);
+      }
+      // Combine the two bytes to form a 16 bit value, and disregard the
+      // most significant 4 bits to extract the lowest 12 bits.
+      const uint16_t raw_depth = ((byte0 << 8) | byte1) & 0x7FF;
+      // Reconstruct 3D point from x, y, raw_depth.
+      geometry_msgs::Point32 point;
+      // Modify the following lines of code to do the right thing, with the
+      // correct parameters.
+      point.z = 1/(a+(b*raw_depth));
+      point.x = ((x-px)/fx)*point.z;
+      point.y = ((y-py)/fy)*point.z;
+      point_cloud.points.push_back(point);
+    }
+  }
+  point_cloud_publisher_.publish(point_cloud);
+}
 
 int main(int argc, char **argv) {
   InitMarkers();
 
-  ros::init(argc, argv, "compsci403_assignment6");
+  ros::init(argc, argv, "camera_rgb_optical_frame");
   ros::NodeHandle n;
+
+  filtered_point_cloud_publisher_ = 
+    n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/FilteredPointCloud", 1);
+
+  point_cloud_publisher_ =
+    n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/PointCloud", 1);
+
+  ros::Subscriber depth_image_subscriber =
+    n.subscribe("/COMPSCI403/DepthImage", 1, DepthImageCallback);
 
   // markers_publisher_ = n.advertise<visualization_msgs::MarkerArray>(
   //     "/COMPSCI403/RRT_Display", 10);
-
-  // ros::ServiceServer server1 = n.advertiseService(
-  //     "COMPSCI403/RandomConfig",
-  //     RandomConfigService);
-  // ros::ServiceServer server2 = n.advertiseService(
-  //     "COMPSCI403/ExtendNode",
-  //     ExtendNodeService);
-  // ros::ServiceServer server3 = n.advertiseService(
-  //     "COMPSCI403/CheckExtension",
-  //     CheckExtensionService);
-  // ros::ServiceServer server4 = n.advertiseService(
-  //     "COMPSCI403/BuildRRT",
-  //     BuildRRTService);
-  // ros::ServiceServer server5 = n.advertiseService(
-  //     "COMPSCI403/RRTPlan",
-  //     RRTPlanService);
-  // ros::ServiceServer server6 = n.advertiseService(
-  //     "COMPSCI403/RRTPlanBonus",
-  //     RRTPlanBonusService);
 
   ros::spin();
   return 0;
