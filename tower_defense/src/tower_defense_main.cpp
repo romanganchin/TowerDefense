@@ -58,6 +58,8 @@ ros::Publisher filtered_point_cloud_publisher_;
 
 // Publisher for 3D point clouds.
 ros::Publisher point_cloud_publisher_;
+ros::Publisher start_cloud_publisher_;
+ros::Publisher end_cloud_publisher_;
 
 //camera intrinsics
 float fx = 588.446;
@@ -244,7 +246,31 @@ static inline int getPointCloud2FieldIndex (const sensor_msgs::PointCloud2 &clou
   }
   return (-1);
  }
-
+float maxOccuringValue(){
+	printf("finding max value\n");
+	float currentCount = 0;
+	float maxCount = 0;
+	float location = 0;
+	SUPERPOINTCLOUD p = POINTCLOUD;
+	for(size_t i = 0; i < p.points.size(); i++){
+		//printf("Z:%f", p.points[i].z());
+		if(isnan(p.points[i].z()) == 0){
+		for(size_t j = 0; j < p.points.size(); j++){
+			if(p.points[j].z()<=p.points[i].z()+.1 || p.points[j].z() >=p.points[i].z()-.1){
+				currentCount++;
+			}
+		}
+		if(currentCount > maxCount){
+			maxCount = currentCount;
+			location = p.points[i].z();
+		}
+		}
+		//printf("\nx %f  weight %f\n",_particles[i].x, _particles[i].weight);	
+	}
+	printf("maxCount ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^%f\n", maxCount);
+	printf("location ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^%f\n", location);
+	return location;
+}
 void DepthImageCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZRGB> >& pointcloud){
   POINTCLOUD.points.clear();
   POINTCLOUD.colors.clear(); 
@@ -256,23 +282,43 @@ void DepthImageCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::Point
       POINTCLOUD.colors.push_back(color);
      // printf("%f, %d, %d\n", (float)pt.r, pt.g, pt.b);
     }
-    
+    //use this ounce to find the z value for the base plane with the intial settup
+    //maxOccuringValue();
     SUPERPOINTCLOUD p = POINTCLOUD;
     sensor_msgs::PointCloud publish_cloud;
     publish_cloud.header.frame_id = "camera_rgb_optical_frame";
     publish_cloud.points.resize(p.points.size());
-   
-    for(size_t i = 0; i < p.points.size(); i++){
-       publish_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
-    }
+    
+    sensor_msgs::PointCloud start_cloud;
+    start_cloud.header.frame_id = "camera_rgb_optical_frame";
+    start_cloud.points.resize(p.points.size());
 
+    sensor_msgs::PointCloud end_cloud;
+    end_cloud.header.frame_id = "camera_rgb_optical_frame";
+    end_cloud.points.resize(p.points.size());
+
+    for(size_t i = 0; i < p.points.size(); i++){
+    	//if(p.points[i].z() <= 1.036 || p.points[i].z() >=1.016)
+    	//z value for recorded bag files 1.026
+    	//found z value - .01
+    	if(p.points[i].z() <=1.016)
+       		publish_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
+       	if(p.colors[i].x() < 100 && p.colors[i].y() < 100 && p.colors[i].z() > 180){
+       		start_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
+       	}
+       	if(p.colors[i].x() > 180 && p.colors[i].y() < 100 && p.colors[i].z() < 100){
+       		end_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
+       	}
+    }
+    start_cloud_publisher_.publish(start_cloud);
+    end_cloud_publisher_.publish(end_cloud);
     point_cloud_publisher_.publish(publish_cloud);
       /*printf("XYZ:%f,%f,%f RGB:%f,%f,%f \n", 
         p.points[i].x(),p.points[i].y(), p.points[i].z(),
         p.colors[i].x(),p.colors[i].y(),p.colors[i].z());*/
     
-    printf("%d\n", p.colors.size());
-    printf("%d\n", p.points.size());
+    printf("%lu\n", p.colors.size());
+    printf("%lu\n", p.points.size());
 
 }
 
@@ -357,6 +403,12 @@ int main(int argc, char **argv) {
 
   point_cloud_publisher_ =
     n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/PointCloud", 1);
+ 
+ start_cloud_publisher_ =
+	n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/StartCloud", 1);
+
+end_cloud_publisher_ =
+	n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/EndCloud", 1);
 
   //this works!
   ros::Subscriber depth_image_subscriber =
