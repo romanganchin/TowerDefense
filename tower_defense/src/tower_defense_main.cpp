@@ -13,6 +13,14 @@
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/point_types.h>
+#include <pcl/PCLPointCloud2.h>
+#include <pcl/conversions.h>
+#include <pcl_ros/transforms.h>
+#include <pcl_ros/point_cloud.h>
+#include <pcl/point_types.h>
+
 
 #include "tower_defense/ObstaclePointCloudSrv.h"
 // #include "tower_defense/RandomConfigSrv.h"
@@ -41,6 +49,7 @@ using std::vector;
 using visualization_msgs::Marker;
 using visualization_msgs::MarkerArray;
 
+typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 // Publisher for marker messages.
 ros::Publisher markers_publisher_;
 
@@ -213,14 +222,61 @@ bool ObstaclePointCloudService(
   //printf("Hello, point cloud %d\n", (int) j);
   return true;
 }
+static inline int getPointCloud2FieldIndex (const sensor_msgs::PointCloud2 &cloud, const std::string &field_name)
+{
+   // Get the index we need
+ for (size_t d = 0; d < cloud.fields.size (); ++d){
+     if (cloud.fields[d].name == field_name)
+      return (d);
+  }
+  return (-1);
+ }
+
 //sensor_msgs/PointCloud2.msg
-void DepthImageCallback(const sensor_msgs::PointCloud2& image) {
+void DepthImageCallback(const boost::shared_ptr<const sensor_msgs::PointCloud2>& input) {
   // Message for published 3D point clouds.
   //this works!!!
   //printf("we are reading the depth image");
   sensor_msgs::PointCloud point_cloud;
-  point_cloud.header = image.header;
+  // point_cloud.header = image.header;
+  //    for (size_t d = 0; d < image.fields.size (); ++d){
+  //       cout << (image.fields[d].name)+ "\n";
+  //   }
+  //   for (size_t i = 0; i < image.data.size (); ++i)
+  //   {
+  //     cout << "  image[" << i << "]: ";
+  //     cout << "\n  " << image.data[i].x;
+  //   }
 
+	// Container for original & filtered data
+     pcl::PCLPointCloud2 pcl_pc2;
+     pcl_conversions::toPCL(*input,pcl_pc2);
+     pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+     pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);
+    
+	PointCloud::Ptr msg (new PointCloud);
+	msg->header.frame_id = "camera_rgb_optical_frame";
+	msg->height = temp_cloud->height;
+	msg->width = temp_cloud->width;
+	//msg->points.push_back (temp_cloud->points);
+   	//printf ("Cloud: width = %d, height = %d\n", temp_cloud->width, temp_cloud->height);
+    BOOST_FOREACH (const pcl::PointXYZ& pt, temp_cloud->points)
+      msg->points.push_back (pt);
+	// // Convert to PCL data type
+	//pcl_conversions::toPCL(*cloud_msg, *cloud);
+
+	// // Perform the actual filtering
+	// pcl::VoxelGrid<pcl::PCLPointCloud2> sor;
+	// sor.setInputCloud (cloudPtr);
+	// sor.setLeafSize (0.1, 0.1, 0.1);
+	// sor.filter (cloud_filtered);
+
+	// // Convert to ROS data type
+	// sensor_msgs::PointCloud2 output;
+	// pcl_conversions::moveFromPCL(cloud_filtered, output);
+
+	// // Publish the data
+	// point_cloud_publisher_.publish (output);
   // for (unsigned int y = 0; y < image.height; ++y) {
   //   for (unsigned int x = 0; x < image.width; ++x) {
   //     uint16_t byte0 = image.data[2 * (x + y * image.width) + 0];
@@ -241,7 +297,7 @@ void DepthImageCallback(const sensor_msgs::PointCloud2& image) {
   //     point_cloud.points.push_back(point);
   //   }
   // }
-  point_cloud_publisher_.publish(point_cloud);
+  point_cloud_publisher_.publish(msg);
 }
 
 int main(int argc, char **argv) {
