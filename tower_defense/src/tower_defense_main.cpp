@@ -74,6 +74,18 @@ Marker edges_marker_;
 Marker map_marker_;
 Marker plan_marker_;
 
+struct SUPERPOINTCLOUD
+{
+  vector<Vector3f> points;
+  vector<Vector3f> colors;
+};
+
+
+
+SUPERPOINTCLOUD POINTCLOUD;
+
+
+
 // Helper function to convert ROS Point32 to Eigen Vectors.
 Vector3f ConvertPointToVector(const Point32& point) {
   return Vector3f(point.x, point.y, point.z);
@@ -176,6 +188,7 @@ void InitMarkers() {
   plan_marker_.color.b = 0.0;
 }
 
+
 //this does not work! copied the code from previous assignment we need to use pointcloud2's everywhere or transform the pointcloud2 to pointcloud in the dpeth image call back
 bool ObstaclePointCloudService(
     tower_defense::ObstaclePointCloudSrv::Request& req,
@@ -232,7 +245,39 @@ static inline int getPointCloud2FieldIndex (const sensor_msgs::PointCloud2 &clou
   return (-1);
  }
 
+void DepthImageCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZRGB> >& pointcloud){
+  POINTCLOUD.points.clear();
+  POINTCLOUD.colors.clear(); 
+
+   BOOST_FOREACH (const pcl::PointXYZRGB& pt, pointcloud->points){
+      Vector3f point(pt.x, pt.y, pt.z);
+      Vector3f color((float) pt.r, (float)pt.g, (float)pt.b);
+      POINTCLOUD.points.push_back(point);
+      POINTCLOUD.colors.push_back(color);
+     // printf("%f, %d, %d\n", (float)pt.r, pt.g, pt.b);
+    }
+    
+    SUPERPOINTCLOUD p = POINTCLOUD;
+    sensor_msgs::PointCloud publish_cloud;
+    publish_cloud.header.frame_id = "camera_rgb_optical_frame";
+    publish_cloud.points.resize(p.points.size());
+   
+    for(size_t i = 0; i < p.points.size(); i++){
+       publish_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
+    }
+
+    point_cloud_publisher_.publish(publish_cloud);
+      /*printf("XYZ:%f,%f,%f RGB:%f,%f,%f \n", 
+        p.points[i].x(),p.points[i].y(), p.points[i].z(),
+        p.colors[i].x(),p.colors[i].y(),p.colors[i].z());*/
+    
+    printf("%d\n", p.colors.size());
+    printf("%d\n", p.points.size());
+
+}
+
 //sensor_msgs/PointCloud2.msg
+ /*
 void DepthImageCallback(const boost::shared_ptr<const sensor_msgs::PointCloud2>& input) {
   // Message for published 3D point clouds.
   //this works!!!
@@ -299,6 +344,7 @@ void DepthImageCallback(const boost::shared_ptr<const sensor_msgs::PointCloud2>&
   // }
   point_cloud_publisher_.publish(msg);
 }
+*/
 
 int main(int argc, char **argv) {
   InitMarkers();
@@ -310,11 +356,11 @@ int main(int argc, char **argv) {
     n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/FilteredPointCloud", 1);
 
   point_cloud_publisher_ =
-    n.advertise<sensor_msgs::PointCloud2>("/COMPSCI403/PointCloud", 1);
+    n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/PointCloud", 1);
 
   //this works!
   ros::Subscriber depth_image_subscriber =
-    n.subscribe("/camera/depth_registered/points", 1, DepthImageCallback);
+    n.subscribe<pcl::PointCloud<pcl::PointXYZRGB> >("/camera/depth_registered/points", 1, DepthImageCallback);
 
   // markers_publisher_ = n.advertise<visualization_msgs::MarkerArray>(
   //     "/COMPSCI403/RRT_Display", 10);
