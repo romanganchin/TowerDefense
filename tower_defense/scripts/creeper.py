@@ -93,6 +93,7 @@ def CheckExtension(point_cloud, r, current, desired):
 #the path coords should only be used by this node, but might be useful for something
 #TODO: test this to make sure it actually works
 def MakePathService(req):
+	print "starting path service..."
 	global path 
 	global path_step_size
 	global creeper_radius
@@ -109,12 +110,14 @@ def MakePathService(req):
 	current_point = start
 
 	while np.sqrt((current_point.x - goal.x)**2 + (current_point.y - goal.y)**2) > 0.1:
+		print "looking at a point..."
 		raw_points  = [rr.location for rr in rrt]
 		q_rand      = RandomConfig(goal)
 		q_i, q_new  = ExtendNode(raw_points, q_rand)
 		q_near      = raw_points[q_i]
 
 		while not CheckExtension(p, creeper_radius, q_near, q_new):
+			print "finding some new points..."
 			q_rand      = RandomConfig(goal)
 			q_i, q_new  = ExtendNode(raw_points, q_rand)
 			q_near      = raw_points[q_i]
@@ -161,6 +164,7 @@ def MakePathService(req):
 			current_len += path_step_size
 
 
+	print "here are the points"
 	for p in path:
 		print p
 
