@@ -111,7 +111,6 @@ def MakePathService(req):
 
 	while np.sqrt((current_point.x - goal.x)**2 + (current_point.y - goal.y)**2) > 0.1:
 		print "looking at a point..."
-		print q_new
 		raw_points  = [rr.location for rr in rrt]
 		q_rand      = RandomConfig(goal)
 		q_i, q_new  = ExtendNode(raw_points, q_rand)
@@ -119,7 +118,7 @@ def MakePathService(req):
 
 		while not CheckExtension(p, creeper_radius, q_near, q_new):
 			print "finding some new points..."
-			# print q_new
+			print q_new
 			q_rand      = RandomConfig(goal)
 			q_i, q_new  = ExtendNode(raw_points, q_rand)
 			q_near      = raw_points[q_i]
