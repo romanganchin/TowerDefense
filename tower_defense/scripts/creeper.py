@@ -96,7 +96,7 @@ def MakePathService(req):
 	start = req.start
 	goal  = req.end
 
-	current_point = first_point
+	current_point = start
 
 	while np.sqrt((current_point.x - goal.x)**2 + (current_point.y - goal.y)**2) > 0.1:
 		raw_points  = [rr.location for rr in rrt]
