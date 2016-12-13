@@ -630,6 +630,7 @@ void gameMap(){
   for(size_t i = 0; i < p.points.size(); i++){
    srv.request.point_cloud[i] = ConvertVectorToPoint(p.points[i]);
   }
+  
   if (get_path_caller.call(srv))
   {
    //not sure if you want the result from the service somewhere else
