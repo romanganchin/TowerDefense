@@ -114,7 +114,7 @@ def MakePathService(req):
 
 	current_point = start
 
-	while np.sqrt((current_point.x - goal.x)**2 + (current_point.y - goal.y)**2) > 0.1:
+	while np.sqrt((current_point.x - goal.x)**2 + (current_point.y - goal.y)**2) > 0.001:
 		print "looking at a point..."
 		raw_points  = [rr.location for rr in rrt]
 		q_rand      = RandomConfig(goal)
