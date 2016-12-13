@@ -16,29 +16,33 @@ import roslib; roslib.load_manifest('tower_defense')
 from geometry_msgs.msg import *
 from tower_defense.srv import *
 
-creeper_radius = 1
-path_step_size = 0.5
+creeper_radius = 0.02
+path_step_size = 0.001
 creeper_health = 10
 creepers       = [] #each creeper should be [health, index of location in path]
 path           = []
 min_value      = -4
 max_value      = 4
+x_bounds = 0.5
+y_bounds = 0.43
 
 class RRTNode():
-	location = Point32()
+	location = Point()
 	parent   = -1
 
 def RandomConfig(goal):
-	global min_value
-	global max_value
+	# global min_value
+	# global max_value
+	global x_bounds
+	global y_bounds
 
 	q_rand = Point()
 	if RandomValue(0, 1) <= 0.05:
 		q_rand.x = goal.x
 		q_rand.y = goal.y
 	else:
-		q_rand.x = np.random.uniform(min_value, max_value)
-		q_rand.y = np.random.uniform(min_value, max_value)
+		q_rand.x = np.random.uniform(-1 * x_bounds, x_bounds)
+		q_rand.y = np.random.uniform(-1 * y_bounds, y_bounds)
 	return q_rand
 
 def ExtendNode(P, q):
@@ -139,7 +143,7 @@ def MakePathService(req):
 
 		while current_len < current_max:
 			new_point = current_start + hat_vector * current_len
-			p         = Point32()
+			p         = Point()
 			p.x       = new_point[0]
 			p.y       = new_point[1]
 
