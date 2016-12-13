@@ -111,6 +111,7 @@ def MakePathService(req):
 
 	while np.sqrt((current_point.x - goal.x)**2 + (current_point.y - goal.y)**2) > 0.1:
 		print "looking at a point..."
+		print q_new
 		raw_points  = [rr.location for rr in rrt]
 		q_rand      = RandomConfig(goal)
 		q_i, q_new  = ExtendNode(raw_points, q_rand)
