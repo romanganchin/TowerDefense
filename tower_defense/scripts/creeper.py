@@ -118,6 +118,7 @@ def MakePathService(req):
 
 		while not CheckExtension(p, creeper_radius, q_near, q_new):
 			print "finding some new points..."
+			print q_new
 			q_rand      = RandomConfig(goal)
 			q_i, q_new  = ExtendNode(raw_points, q_rand)
 			q_near      = raw_points[q_i]
