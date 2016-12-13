@@ -15,6 +15,8 @@ import rospy
 import roslib; roslib.load_manifest('tower_defense')
 from geometry_msgs.msg import *
 from tower_defense.srv import *
+from tower_defense.msg import *
+from tower_defense.srv import *
 
 creeper_radius = 0.02
 path_step_size = 0.001
@@ -95,6 +97,11 @@ def MakePathService(req):
 	p     = req.point_cloud
 	start = req.start
 	goal  = req.end
+
+	first_rrt = RRTNode()
+  	first_rrt.location = start
+  	first_rrt.parent   = -1
+  	rrt = [first_rrt]
 
 	current_point = start
 

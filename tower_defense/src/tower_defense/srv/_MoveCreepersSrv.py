@@ -117,25 +117,31 @@ import geometry_msgs.msg
 import std_msgs.msg
 
 class MoveCreepersSrvResponse(genpy.Message):
-  _md5sum = "6b405f1ffe0a958f76f1a9485c4fb14b"
+  _md5sum = "b02158e175ba8c2df2cd467c4f121a56"
   _type = "tower_defense/MoveCreepersSrvResponse"
   _has_header = False #flag to mark the presence of a Header object
-  _full_text = """geometry_msgs/Point[] creeper_locations
+  _full_text = """geometry_msgs/Point32[] creeper_locations
 std_msgs/Bool reached_end
 
 
 ================================================================================
-MSG: geometry_msgs/Point
-# This contains the position of a point in free space
-float64 x
-float64 y
-float64 z
+MSG: geometry_msgs/Point32
+# This contains the position of a point in free space(with 32 bits of precision).
+# It is recommeded to use Point wherever possible instead of Point32.  
+# 
+# This recommendation is to promote interoperability.  
+#
+# This message is designed to take up less space when sending
+# lots of points at once, as in the case of a PointCloud.  
 
+float32 x
+float32 y
+float32 z
 ================================================================================
 MSG: std_msgs/Bool
 bool data"""
   __slots__ = ['creeper_locations','reached_end']
-  _slot_types = ['geometry_msgs/Point[]','std_msgs/Bool']
+  _slot_types = ['geometry_msgs/Point32[]','std_msgs/Bool']
 
   def __init__(self, *args, **kwds):
     """
@@ -178,7 +184,7 @@ bool data"""
       buff.write(_struct_I.pack(length))
       for val1 in self.creeper_locations:
         _x = val1
-        buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
+        buff.write(_struct_3f.pack(_x.x, _x.y, _x.z))
       buff.write(_struct_B.pack(self.reached_end.data))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
@@ -199,11 +205,11 @@ bool data"""
       (length,) = _struct_I.unpack(str[start:end])
       self.creeper_locations = []
       for i in range(0, length):
-        val1 = geometry_msgs.msg.Point()
+        val1 = geometry_msgs.msg.Point32()
         _x = val1
         start = end
-        end += 24
-        (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
+        end += 12
+        (_x.x, _x.y, _x.z,) = _struct_3f.unpack(str[start:end])
         self.creeper_locations.append(val1)
       start = end
       end += 1
@@ -225,7 +231,7 @@ bool data"""
       buff.write(_struct_I.pack(length))
       for val1 in self.creeper_locations:
         _x = val1
-        buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
+        buff.write(_struct_3f.pack(_x.x, _x.y, _x.z))
       buff.write(_struct_B.pack(self.reached_end.data))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
@@ -247,11 +253,11 @@ bool data"""
       (length,) = _struct_I.unpack(str[start:end])
       self.creeper_locations = []
       for i in range(0, length):
-        val1 = geometry_msgs.msg.Point()
+        val1 = geometry_msgs.msg.Point32()
         _x = val1
         start = end
-        end += 24
-        (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
+        end += 12
+        (_x.x, _x.y, _x.z,) = _struct_3f.unpack(str[start:end])
         self.creeper_locations.append(val1)
       start = end
       end += 1
@@ -263,9 +269,9 @@ bool data"""
 
 _struct_I = genpy.struct_I
 _struct_B = struct.Struct("<B")
-_struct_3d = struct.Struct("<3d")
+_struct_3f = struct.Struct("<3f")
 class MoveCreepersSrv(object):
   _type          = 'tower_defense/MoveCreepersSrv'
-  _md5sum = 'f428434760fd966922080bb0858f16a6'
+  _md5sum = 'e2834ea2353683ade5972a04f8673e55'
   _request_class  = MoveCreepersSrvRequest
   _response_class = MoveCreepersSrvResponse
