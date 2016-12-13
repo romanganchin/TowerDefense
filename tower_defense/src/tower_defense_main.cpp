@@ -31,7 +31,7 @@
 #include <pcl/filters/extract_indices.h>
 */
 #include "tower_defense/ObstaclePointCloudSrv.h"
-// #include "tower_defense/RandomConfigSrv.h"
+#include "tower_defense/HurtCreeperSrv.h"
 // #include "tower_defense/ExtendNodeSrv.h"
 // #include "tower_defense/CheckExtensionSrv.h"
 // #include "tower_defense/BuildRRTSrv.h"
@@ -69,6 +69,8 @@ ros::Publisher point_cloud_publisher_;
 ros::Publisher start_cloud_publisher_;
 ros::Publisher end_cloud_publisher_;
 
+//Service callers
+ros::ServiceClient hurt_creeper;
 
 // Markers for visualization.
 Marker vertices_marker_;
@@ -91,7 +93,7 @@ float MODEZ = 0;
 float GOAL_H  = .1;
 
 //Wall height (maximum height of walls)
-float WALL_H = .13;
+float WALL_H = .14;
 
 //Tower height (maximum height of towers)
 float TOWER_H = .25;
@@ -143,8 +145,8 @@ struct tower{
 };
 
 struct creep{
-	Vector3f location;
-	float damageTaken;
+  Vector3f location;
+  float damageTaken;
 };
 //Constructor method for tower
 tower makeTower(Vector3f l, vector<Vector3f> po, int d, float r){
@@ -267,136 +269,6 @@ void InitMarkers() {
   plan_marker_.color.b = 0.0;
 }
 
-////////////////////////////////////////////////////
-//     Unused Functions (DELETE?)                 //
-////////////////////////////////////////////////////
-
-//this does not work! copied the code from previous assignment we need to use pointcloud2's everywhere or transform the pointcloud2 to pointcloud in the dpeth image call back
-bool ObstaclePointCloudService(tower_defense::ObstaclePointCloudSrv::Request& req,tower_defense::ObstaclePointCloudSrv::Response& res) {
-  Matrix3f R;
-
-  for (int row = 0; row < 3; ++row) {
-    for (int col = 0; col < 3; ++col) {
-      R(row, col) = req.R[col * 3 + row];
-    }
-  }
-  const Vector3f T(req.T.x, req.T.y, req.T.z);
-
-  vector<Vector3f> filtered_point_cloud(req.P.size());
-  // Copy over all the points.
-  size_t j = 0;
-  vector<Vector3f> point_cloud(req.P.size());
-  for (size_t i = 0; i < point_cloud.size(); ++i) {
-    point_cloud[i] = ConvertPointToVector(req.P[i]);
-    point_cloud[i] = R * (point_cloud[i]) + T;
-    if(point_cloud[i].z() > .01){
-      filtered_point_cloud[j] = point_cloud[i];
-      j++;
-    }
-  }
-
-  filtered_point_cloud.resize(j); 
-    
-  // Write code here to transform the input point cloud from the Kinect reference frame to the
-  // robot's reference frame. Then filter out the points corresponding to ground
-  // or heights larger than the height of the robot
- 
-  res.P_prime.resize(j);
-   
-  sensor_msgs::PointCloud publish_cloud;
-  publish_cloud.header.frame_id = "base_link";
-  publish_cloud.points.resize(j);
-  for (size_t i = 0; i < j; ++i) {
-    res.P_prime[i] = ConvertVectorToPoint(filtered_point_cloud[i]);
-    publish_cloud.points[i] = res.P_prime[i];
-  }
-  //we might want to publish res.P_prime instead because 
-  filtered_point_cloud_publisher_.publish(publish_cloud);
-  //printf("Hello, point cloud %d\n", (int) j);
-  return true;
-}
-
-
-static inline int getPointCloud2FieldIndex (const sensor_msgs::PointCloud2 &cloud, const std::string &field_name)
-{
-   // Get the index we need
- for (size_t d = 0; d < cloud.fields.size (); ++d){
-     if (cloud.fields[d].name == field_name)
-      return (d);
-  }
-  return (-1);
- }
-
-
-//sensor_msgs/PointCloud2.msg
- /*
-void DepthImageCallback(const boost::shared_ptr<const sensor_msgs::PointCloud2>& input) {
-  // Message for published 3D point clouds.
-  //this works!!!
-  //printf("we are reading the depth image");
-  sensor_msgs::PointCloud point_cloud;
-  // point_cloud.header = image.header;
-  //    for (size_t d = 0; d < image.fields.size (); ++d){
-  //       cout << (image.fields[d].name)+ "\n";
-  //   }
-  //   for (size_t i = 0; i < image.data.size (); ++i)
-  //   {
-  //     cout << "  image[" << i << "]: ";
-  //     cout << "\n  " << image.data[i].x;
-  //   }
-
-  // Container for original & filtered data
-     pcl::PCLPointCloud2 pcl_pc2;
-     pcl_conversions::toPCL(*input,pcl_pc2);
-     pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-     pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);
-    
-  PointCloud::Ptr msg (new PointCloud);
-  msg->header.frame_id = "camera_rgb_optical_frame";
-  msg->height = temp_cloud->height;
-  msg->width = temp_cloud->width;
-  //msg->points.push_back (temp_cloud->points);
-    //printf ("Cloud: width = %d, height = %d\n", temp_cloud->width, temp_cloud->height);
-    BOOST_FOREACH (const pcl::PointXYZ& pt, temp_cloud->points)
-      msg->points.push_back (pt);
-  // // Convert to PCL data type
-  //pcl_conversions::toPCL(*cloud_msg, *cloud);
-
-  // // Perform the actual filtering
-  // pcl::VoxelGrid<pcl::PCLPointCloud2> sor;
-  // sor.setInputCloud (cloudPtr);
-  // sor.setLeafSize (0.1, 0.1, 0.1);
-  // sor.filter (cloud_filtered);
-
-  // // Convert to ROS data type
-  // sensor_msgs::PointCloud2 output;
-  // pcl_conversions::moveFromPCL(cloud_filtered, output);
-
-  // // Publish the data
-  // point_cloud_publisher_.publish (output);
-  // for (unsigned int y = 0; y < image.height; ++y) {
-  //   for (unsigned int x = 0; x < image.width; ++x) {
-  //     uint16_t byte0 = image.data[2 * (x + y * image.width) + 0];
-  //     uint16_t byte1 = image.data[2 * (x + y * image.width) + 1];
-  //     if (!image.is_bigendian) {
-  //       std::swap(byte0, byte1);
-  //     }
-  //     // Combine the two bytes to form a 16 bit value, and disregard the
-  //     // most significant 4 bits to extract the lowest 12 bits.
-  //     const uint16_t raw_depth = ((byte0 << 8) | byte1) & 0x7FF;
-  //     // Reconstruct 3D point from x, y, raw_depth.
-  //     geometry_msgs::Point32 point;
-  //     // Modify the following lines of code to do the right thing, with the
-  //     // correct parameters.
-  //     point.z = 1/(a+(b*raw_depth));
-  //     point.x = ((x-px)/fx)*point.z;
-  //     point.y = ((y-py)/fy)*point.z;
-  //     point_cloud.points.push_back(point);
-  //   }
-  // }
-  point_cloud_publisher_.publish(msg);
-}
-*/
 
 ///////////////////////////////////////////////////
 //                 Functions                     //
@@ -404,44 +276,78 @@ void DepthImageCallback(const boost::shared_ptr<const sensor_msgs::PointCloud2>&
 void gameMap();
 float maxOccuringValue();
 /*
-	returns the 2d distance between two points, 
-	to be used to find the distance between the location of the creep and the location
-	of the tower
+  returns the 2d distance between two points, 
+  to be used to find the distance between the location of the creep and the location
+  of the tower
 */
 float distanceBetweenTwoPoints(Vector3f v1, Vector3f v2){
-	float diffY = v1.y() - v2.y();
+  float diffY = v1.y() - v2.y();
     float diffX = v1.x() - v2.x();
     return sqrt((diffY * diffY) + (diffX * diffX));
 }
 /*
-	Finds the distance of the creep that is closest to the tower
+  Finds the distance of the creep that is closest to the tower
 */
 creep getClosestCreep(tower currentTower, vector<creep> creeps){
-	float closestDistance = distanceBetweenTwoPoints(currentTower.location, creeps[0].location);
-	float currentDistance = closestDistance;
-	creep c = creeps[0];
-	for(size_t i = 0; i < creeps.size(); i++){
-		currentDistance = distanceBetweenTwoPoints(currentTower.location, creeps[i].location);
-		if(currentDistance < closestDistance){
-			closestDistance = currentDistance;
-			c = creeps[i];
-		}
-	}
-	return c;
+  float closestDistance = distanceBetweenTwoPoints(currentTower.location, creeps[0].location);
+  float currentDistance = closestDistance;
+  creep c = creeps[0];
+  for(size_t i = 0; i < creeps.size(); i++){
+    currentDistance = distanceBetweenTwoPoints(currentTower.location, creeps[i].location);
+    if(currentDistance < closestDistance){
+      closestDistance = currentDistance;
+      c = creeps[i];
+    }
+  }
+  return c;
 }
 void TowerAI(vector<tower> towers, vector<creep> creeps){
-	//variable for message to send to HurtCreepService
-	//HurtCreepService takes 
-	//int32[] damage
+  //variable for message to send to HurtCreepService
+  //HurtCreepService takes 
+  //int32[] damage
     //geometry_msgs/Point32[] location
     vector<creep> sendToHurtCreeperService;
     creep tempCreep;
-	for(size_t i = 0; i < towers.size(); i++){
-		tempCreep = getClosestCreep(towers[i], creeps);
-		tempCreep.damageTaken = towers[i].damage;
-		sendToHurtCreeperService.push_back(tempCreep);
-	}
-	//sendtoHurtCreeperService here
+  for(size_t i = 0; i < towers.size(); i++){
+    tempCreep = getClosestCreep(towers[i], creeps);
+    tempCreep.damageTaken = towers[i].damage;
+    sendToHurtCreeperService.push_back(tempCreep);
+  }
+  
+  // //sendtoHurtCreeperService here
+  // tower_defense::HurtCreeperSrv srv;
+  
+  // //resize
+  // srv.request.damage.resize(sendToHurtCreeperService.size());
+  // srv.request.location.resize(sendToHurtCreeperService.size());
+
+  // //convert to srv type HurtCreeperSrv
+  // for(size_t i = 0; i < sendToHurtCreeperService.size(); i++){
+  //  srv.request.damage[i] = (int)sendToHurtCreeperService[i].damageTaken;
+  //  srv.request.location[i] = ConvertVectorToPoint(sendToHurtCreeperService[i].location);
+  // }
+
+  // if (hurt_creeper.call(srv))
+  // {
+  //  //not sure if you want the result from the service somewhere else
+  //  //the service returns creeper locations
+  //  //if you want the result somewhere else either make it a global or 
+  //  //just have towerai method return sendtoHurtCreeperService
+  //  // vector<creep> updatedCreeperLocations;
+  //  // creep c;
+  //  // const geometry_msgs::Point32_<std::allocator<void> >& p = srv.response.creeper_locations;
+  //  // for(size_t i = 0;i < p.size();i++){
+  //  //  c.location = ConvertPointToVector(p);
+  //  //  c.damageTaken = 0;
+  //  //  updatedCreeperLocations.push_back(c);
+  //  // }
+
+  // }
+  // else
+  // {
+  //  ROS_ERROR("Failed to call service hurt creeper");
+  //  //return 1;
+  // }  
 }
 //Determines the mode of the z coordinates for the SUPERPOINTCLOUD
 float maxOccuringValue(){
@@ -453,7 +359,7 @@ float maxOccuringValue(){
   for(size_t i = 0; i < pp.points.size(); i+=10){
     //printf("Z:%f", p.points[i].z());
     if(isnan(pp.points[i].z()) == 0){
-    for(size_t j = 0; j < pp.points.size(); j++){
+    for(size_t j = 0; j < pp.points.size(); j+= 5){
       if(pp.points[j].z()<=pp.points[i].z()+.1 || pp.points[j].z() >=pp.points[i].z()-.1){
         currentCount++;
       }
@@ -530,48 +436,105 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
 
 }
 
-/* NOT DONE YET
-void towerFind(SUPERPOINTCLOUD towercloud){
-  size_t towMag = towercloud.points.size();
+//Given: a pointcloud with the points which comprise all the 
+//towers in the game space 
+//Identifies each tower in the space and pushing to the TOWERS vector
+void towerFind(SUPERPOINTCLOUD tcloud, size_t towercutoff, float radius){
+  printf("TOWER FIND\n");
+  size_t towMag = tcloud.points.size();
   size_t totalPoints = towMag;
+
+  if(towMag < towercutoff){printf("ERROR TOWERFIND: NOT ENOUGH POINTS\n"); return;}
+  SUPERPOINTCLOUD preCloud = tcloud;
+ 
+  vector<tower> newTowers;
+  TOWERS = newTowers;
   
   //Only searches for 20 towers
-  size_t tower_limit = 20;
+  size_t tower_limit = 30;
   size_t limiter = 0;
-  //A tower must have atleast 100 points. 
-  size_t towercutoff = 100;
-  //Search entire space for 
+
+   
+  //Tracks best tower information
+  size_t mostPoints = 1;
+  vector<Vector3f> bestcolors;
+  bestcolors = tcloud.colors;
+  tower best_tower;
+  //Search entire space for
   while(totalPoints > towercutoff && limiter <= tower_limit){
+    //Increment limiter
     limiter++;
 
-    size_t mostPoints = 0;
-    tower best_tower; 
-    for(int i = 0; i < towMag; i++){
+    //preCloud saves the state of flagged and unflagged points
+    //A flagged point is already included in a tower, and cannot be 
+    //added to another tower. 
+    if(mostPoints == 0){printf("NO MORE TOWERS\n");break; }
+    if(mostPoints > towercutoff){
+      preCloud.colors = bestcolors;
+      TOWERS.push_back(best_tower);
+      printf("Got One %lu\n", mostPoints);
+     // printf("LOCA %f, %f, %f\n", best_tower.location.x(), 
+      //  best_tower.location.y(), best_tower.location.z());
+      
+    }
+    
+    
+    //Tracks the tower of bestfit
+    mostPoints = 0;
+    
+
+    //For every point in towercloud if it is a a good center location
+    //for a tower of best fit
+    for(size_t i = 0; i < towMag; i++){
+      SUPERPOINTCLOUD towercloud = preCloud;
+      //Tracks potential towers of best fit
       size_t tempPoints = 0; 
+
+      //The point to be tested
       Vector3f pMid = towercloud.points[i];
 
-
+      //Store information on potential towers
       tower temp_tower;
       temp_tower.location = pMid;
-
-      for(int j = 0; j < towMag; j++){
-        Vector3f test = towercloud.points[i];
-        float distance = sqrt(pow(pMid.x() - test.x(),2) +
-                              pow(pMid.y() - test.y(),2) +
-                              pow(pMid.z() - test.z(),2));
-        if(distance < .02){
-          temp_tower.points.push_back(test);
-          tempPoints++;
-        }
-        if(tempPoints > mostPoints){
-          best_tower = 
+      if(towercloud.colors[i].x() == 0){
+        //Check to see how many points are included in the tower 
+        //(with in) a radius around pMid
+        for(size_t j = 0; j < towMag; j++){
+          //Checks the flag on the current point
+          if (towercloud.colors[j].x() == 0){
+            //The point to be included or unincluded
+            Vector3f test = towercloud.points[j];
+            float distance = sqrt(pow(pMid.x() - test.x(),2) +
+                                  pow(pMid.y() - test.y(),2) +
+                                  pow(pMid.z() - test.z(),2));
+            
+            if(distance < radius){
+              //If with the radius, push the point to the temp
+              //towers array of points
+              temp_tower.points.push_back(test);
+              //Increase the count of the number of points
+              //In the current tower
+              tempPoints++;
+              //Flag as included
+              Vector3f newF(1,0,0);
+              towercloud.colors[j] = newF;
+            }
+            //If the temp tower is the tower of bestfit for pmid 
+            //Set it as the tower of best fit
+            if(tempPoints > mostPoints && tempPoints > towercutoff){
+              mostPoints = tempPoints;
+              best_tower = temp_tower;
+              bestcolors = towercloud.colors;
+            }
+          }
         }
       }
     }
+  }
+  printf("TOWER DONE\n");
+}
 
-}
-}
-*/
+
 
 //Finds the location of the start point, goal point, and towers
 //Identifies all towers
@@ -584,23 +547,30 @@ void gameMap(){
   //towercloiud for points that make up towers
   //startcloud 
 
-
   for(size_t i = 0; i <= p.points.size(); i++){
     Vector3f cur = p.points[i];
-    float height = MODEZ - POINTCLOUD.points[i].z();
-    if(height > WALL_H){
+    float height = MODEZ - cur.z();
+  
+    if(height > WALL_H && cur.z() < MODEZ){
       towercloud.points.push_back(cur);
+      //We are going to use the color red as a flag in find tower
+      Vector3f color(0,0,0);
+      towercloud.colors.push_back(color);
     }
     if(height < GOAL_H && height > 0){
       //RGB.x() = red, .y() = Green, .z() = blue
       Vector3f rgb = p.colors[i];
+
+      //printf("%f %f %f\n", rgb.x(), rgb.y(), rgb.z());
       //If blue, then it is a start
       if(rgb.z() > 120 && rgb.z() > rgb.x()*2 && rgb.z() > rgb.y()*2){
+       
         startcloud.points.push_back(cur);
         startcloud.colors.push_back(rgb);
       }
       //If red then is an end
       if(rgb.x() > 120 && rgb.x() > rgb.z()*1.5 && rgb.x() > rgb.y()*1.5){
+       
         goalcloud.points.push_back(cur);
         goalcloud.colors.push_back(rgb);
       }
@@ -617,6 +587,8 @@ void gameMap(){
   Vector3f startPoint(0,0,0);
   for(size_t i = 0; i < startMag; i++){
     Vector3f cur = startcloud.points[i];
+    
+    //printf("S %f, %f, %f \n", startPoint.x(), startPoint.y(), startPoint.z());
     startPoint.x() += cur.x();
     startPoint.y() += cur.y();
     startPoint.z() += cur.z();
@@ -630,6 +602,7 @@ void gameMap(){
   Vector3f goalPoint(0,0,0);
   for(size_t i = 0; i < goalMag; i++){
     Vector3f cur = goalcloud.points[i];
+    //printf("G %f, %f, %f \n", goalPoint.x(), goalPoint.y(), goalPoint.z());
     goalPoint.x() += cur.x();
     goalPoint.y() += cur.y();
     goalPoint.z() += cur.z();
@@ -640,6 +613,155 @@ void gameMap(){
 
   printf("Start: %f,%f,%f\n", startPoint.x(), startPoint.y(), startPoint.z());
   printf("Goal: %f,%f,%f\n", goalPoint.x(), goalPoint.y(), goalPoint.z());
+  START = startPoint;
+  GOAL = goalPoint;
+  //Pass the tower cloud and the minimum number of points to make up a tower
+  towerFind(towercloud, 100, .05);
+  printf("Towers %lu\n", TOWERS.size());
+}
+
+//////////////////////////////////////////////////
+//                  Testing                     //
+/////////////////////////////////////////////////
+
+void testingSuite(){
+  //////////////////test_simple///////////////
+  SUPERPOINTCLOUD test_simple;
+  for(int i = 0; i < 100; i++){
+    Vector3f point(0,0,0);
+    test_simple.points.push_back(point);
+    test_simple.colors.push_back(point);
+  }
+  int counter = 0;
+  for(int j = 0; j < 10; j++){
+    for(int i = 0; i < 10; i++){
+      test_simple.points[counter].x() = i;
+      test_simple.points[counter].y() = j;
+      counter++;
+    }
+  }
+  //////////////////test_noise///////////////
+  SUPERPOINTCLOUD test_noise;
+  test_noise = test_simple;
+  for(int i = 0; i < 100; i++){
+    if(i % 7 == 1){test_noise.points[i].z() = -.05;}
+  }
+
+  //////////////////test_mini////////////////
+  SUPERPOINTCLOUD test_mini;
+  test_mini = test_simple;
+  counter = 0;
+  
+  for(int j = 0; j < 10; j++){
+    for(int i = 0; i < 10; i++){
+      //Make Walls
+      if(counter%10 == 0 || counter%10 == 9 || j == 0 || j == 9){
+        test_mini.points[counter].z() =-.10;
+      }
+      if(counter == 11|| counter == 12 || counter == 21|| counter ==22){
+        test_mini.points[counter].z() = -.05;
+        test_mini.colors[counter].z() = 200;
+        test_mini.colors[counter].y() = 10;
+        test_mini.colors[counter].x() = 10;
+      }
+      if(counter == 54|| counter == 55 || counter ==64 || counter == 65){
+        test_mini.points[counter].x() = test_mini.points[counter].x()*.01;
+        test_mini.points[counter].y() = test_mini.points[counter].y()*.01;
+        test_mini.points[counter].z() = -.20;
+        
+      }
+      if(counter == 77|| counter == 78 || counter == 87|| counter == 88){
+        test_mini.points[counter].z() = -.05;
+        test_mini.colors[counter].x() = 200;
+        test_mini.colors[counter].y() = 10;
+        test_mini.colors[counter].z() = 10;
+      }
+      //printf("%f", test_mini.points[counter].z());
+      counter++;
+    }
+    //printf("\n");
+  }
+  ////////////////////////test_twotowers/////////////////
+  
+  SUPERPOINTCLOUD test_twotowers = test_mini;
+  test_twotowers.points[0].z() = -.20;
+  test_twotowers.points[0].x() *= .01;
+  test_twotowers.points[0].y() *= .01;
+
+  test_twotowers.points[1].z() = -.20;
+  test_twotowers.points[1].x() *= .01;
+  test_twotowers.points[1].y() *= .01;
+
+  test_twotowers.points[10].z() = -.20;
+  test_twotowers.points[10].x() *= .01;
+  test_twotowers.points[10].y() *= .01;
+
+  test_twotowers.points[11].z() = -.20;
+  test_twotowers.points[11].x() *= .01;
+  test_twotowers.points[11].y() *= .01;
+
+  ////////TESTS FOR maxoccurringValue///////
+  POINTCLOUD = test_simple;
+  MODEZ = maxOccuringValue();
+  printf("maxOccuringValue Tests\n");
+  printf("Test 1: Expected 0: Found = %f", MODEZ);
+  if(MODEZ == 0){printf(" PASSED!\n");}
+  else printf("FAILED\n");
+
+  POINTCLOUD = test_noise;
+  MODEZ = maxOccuringValue();
+  printf("Test 2: Expected 0: Found = %f", MODEZ);
+  if(MODEZ == 0){printf(" PASSED!\n");}
+  else printf("FAILED\n");
+
+  //////////TESTS FOR gameMap and Towerfind///////////////
+  p = test_mini;
+  gameMap();
+  printf("gameMap and Towerfind Tests\n");
+  printf("Test 1: Start(1.5, 1.5, -.05): Found = %f, %f, %f\n", START.x(), START.y(), START.z());
+  printf("Test 2: GOAL(7.5, 7.5, -.05): Found = %f, %f, %f\n", GOAL.x(), GOAL.y(), GOAL.z());
+  SUPERPOINTCLOUD towercloud;
+  towercloud.points.push_back(p.points[54]);
+  towercloud.points.push_back(p.points[55]);
+  towercloud.points.push_back(p.points[64]);
+  towercloud.points.push_back(p.points[65]);
+  towercloud.colors.push_back(p.colors[54]);
+  towercloud.colors.push_back(p.colors[54]);
+  towercloud.colors.push_back(p.colors[54]);
+  towercloud.colors.push_back(p.colors[54]);
+  towerFind(towercloud, 2, .05);
+  printf("Test 3: 1 Tower: Tower = %lu\n", TOWERS.size());
+  printf("Test 4: Loc(.04, .05, -.20) Location(%f, %f, %f ) \n", TOWERS[0].location.x(), 
+    TOWERS[0].location.y(), TOWERS[0].location.z()) ;
+
+  p = test_twotowers;
+  gameMap();
+  printf("gameMap Tests\n");
+  SUPERPOINTCLOUD towercloud2;
+  Vector3f color(0,0,0);
+  towercloud2.points.push_back(p.points[54]);
+  towercloud2.points.push_back(p.points[55]);
+  towercloud2.points.push_back(p.points[64]);
+  towercloud2.points.push_back(p.points[65]);
+    towercloud2.points.push_back(p.points[0]);
+  towercloud2.points.push_back(p.points[1]);
+  towercloud2.points.push_back(p.points[10]);
+  towercloud2.points.push_back(p.points[11]);
+  towercloud2.colors.push_back(color);
+  towercloud2.colors.push_back(color);
+  towercloud2.colors.push_back(color);
+  towercloud2.colors.push_back(color);
+  towercloud2.colors.push_back(color);
+  towercloud2.colors.push_back(color);
+  towercloud2.colors.push_back(color);
+  towercloud2.colors.push_back(color);
+  towerFind(towercloud2, 2, .05);
+  printf("Test 5: 2 Tower: Tower = %lu\n", TOWERS.size());
+  printf("Test 6: Loc(.04, .05, -.20) Location(%f, %f, %f ) \n", TOWERS[0].location.x(), 
+    TOWERS[0].location.y(), TOWERS[0].location.z()) ;
+  printf("Test 7: Loc (0,0,-.20) Location(%f, %f, %f ) \n", TOWERS[1].location.x(), 
+    TOWERS[1].location.y(), TOWERS[1].location.z()) ;
+  
 }
 
 
@@ -649,7 +771,11 @@ void gameMap(){
 
 int main(int argc, char **argv) {
   InitMarkers();
-
+  if(argc > 1){
+    printf("TESTING\n");
+    testingSuite();
+    return 0;
+  }
   ros::init(argc, argv, "camera_rgb_optical_frame");
   ros::NodeHandle n;
 
@@ -668,6 +794,9 @@ end_cloud_publisher_ =
   //this works!
   ros::Subscriber depth_image_subscriber =
     n.subscribe<pcl::PointCloud<pcl::PointXYZRGB> >("/camera/depth_registered/points", 1, KinectCallback);
+
+  hurt_creeper =
+  n.serviceClient<tower_defense::HurtCreeperSrv>("/COMPSCI403/HurtCreeper");
 
   // markers_publisher_ = n.advertise<visualization_msgs::MarkerArray>(
   //     "/COMPSCI403/RRT_Display", 10);
