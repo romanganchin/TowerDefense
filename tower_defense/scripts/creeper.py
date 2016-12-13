@@ -161,6 +161,9 @@ def MakePathService(req):
 			current_len += path_step_size
 
 
+	for p in path:
+		print p
+
 	return MakePathServiceResponse(path)
 
 #every time this is called the creepers will all move forward one step
