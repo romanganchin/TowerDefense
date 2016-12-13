@@ -16,7 +16,7 @@ import roslib; roslib.load_manifest('tower_defense')
 from geometry_msgs.msg import *
 from tower_defense.srv import *
 
-creeper_radius = 0.0002
+creeper_radius = 0.1
 path_step_size = 0.001
 creeper_health = 10
 creepers       = [] #each creeper should be [health, index of location in path]
@@ -125,7 +125,7 @@ def MakePathService(req):
 
 		while not CheckExtension(p, creeper_radius, q_near, q_new):
 			print "finding some new points..."
-			print q_new
+			# print q_new
 			q_rand      = RandomConfig(goal)
 			q_i, q_new  = ExtendNode(raw_points, q_rand)
 			q_near      = raw_points[q_i]
