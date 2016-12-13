@@ -1,2 +1,4 @@
 tower_defense/bin
 tower_defense/build
+tower_defense/src/tower_defense/
+tower_defense/srv_gen/
