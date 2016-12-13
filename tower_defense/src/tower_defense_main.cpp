@@ -314,40 +314,39 @@ void TowerAI(vector<tower> towers, vector<creep> creeps){
     sendToHurtCreeperService.push_back(tempCreep);
   }
   
-  // //sendtoHurtCreeperService here
-  // tower_defense::HurtCreeperSrv srv;
+  //sendtoHurtCreeperService here
+  tower_defense::HurtCreeperSrv srv;
   
-  // //resize
-  // srv.request.damage.resize(sendToHurtCreeperService.size());
-  // srv.request.location.resize(sendToHurtCreeperService.size());
+  //resize
+  srv.request.damage.resize(sendToHurtCreeperService.size());
+  srv.request.location.resize(sendToHurtCreeperService.size());
 
-  // //convert to srv type HurtCreeperSrv
-  // for(size_t i = 0; i < sendToHurtCreeperService.size(); i++){
-  //  srv.request.damage[i] = (int)sendToHurtCreeperService[i].damageTaken;
-  //  srv.request.location[i] = ConvertVectorToPoint(sendToHurtCreeperService[i].location);
-  // }
+  //convert to srv type HurtCreeperSrv
+  for(size_t i = 0; i < sendToHurtCreeperService.size(); i++){
+   srv.request.damage[i] = (int)sendToHurtCreeperService[i].damageTaken;
+   srv.request.location[i] = ConvertVectorToPoint(sendToHurtCreeperService[i].location);
+  }
 
-  // if (hurt_creeper.call(srv))
-  // {
-  //  //not sure if you want the result from the service somewhere else
-  //  //the service returns creeper locations
-  //  //if you want the result somewhere else either make it a global or 
-  //  //just have towerai method return sendtoHurtCreeperService
-  //  // vector<creep> updatedCreeperLocations;
-  //  // creep c;
-  //  // const geometry_msgs::Point32_<std::allocator<void> >& p = srv.response.creeper_locations;
-  //  // for(size_t i = 0;i < p.size();i++){
-  //  //  c.location = ConvertPointToVector(p);
-  //  //  c.damageTaken = 0;
-  //  //  updatedCreeperLocations.push_back(c);
-  //  // }
+  if (hurt_creeper.call(srv))
+  {
+   //not sure if you want the result from the service somewhere else
+   //the service returns creeper locations
+   //if you want the result somewhere else either make it a global or 
+   //just have towerai method return sendtoHurtCreeperService
+   vector<creep> updatedCreeperLocations;
+   creep c;
+   for(size_t i = 0;i < srv.response.creeper_locations.size();i++){
+    c.location = ConvertPointToVector(srv.response.creeper_locations[i]);
+    c.damageTaken = 0;
+    updatedCreeperLocations.push_back(c);
+   }
 
-  // }
-  // else
-  // {
-  //  ROS_ERROR("Failed to call service hurt creeper");
-  //  //return 1;
-  // }  
+  }
+  else
+  {
+   ROS_ERROR("Failed to call service hurt creeper");
+   //return 1;
+  }  
 }
 //Determines the mode of the z coordinates for the SUPERPOINTCLOUD
 float maxOccuringValue(){
