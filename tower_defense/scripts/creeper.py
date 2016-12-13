@@ -16,15 +16,17 @@ import roslib; roslib.load_manifest('tower_defense')
 from geometry_msgs.msg import *
 from tower_defense.srv import *
 
-creeper_radius = 0.02
+creeper_radius = 0.0002
 path_step_size = 0.001
 creeper_health = 10
 creepers       = [] #each creeper should be [health, index of location in path]
 path           = []
 min_value      = -4
 max_value      = 4
-x_bounds = 0.5
-y_bounds = 0.43
+x_min = -0.745
+x_max = 0.77
+y_max = 0.6
+y_min = -0.44
 
 # Return a random value between min and max.
 def RandomValue(min_value, max_value):
@@ -38,16 +40,18 @@ class RRTNode():
 def RandomConfig(goal):
 	# global min_value
 	# global max_value
-	global x_bounds
-	global y_bounds
+	global x_min
+	global x_max
+	global y_min
+	global y_max
 
 	q_rand = Point32()
 	if RandomValue(0, 1) <= 0.05:
 		q_rand.x = goal.x
 		q_rand.y = goal.y
 	else:
-		q_rand.x = np.random.uniform(-1 * x_bounds, x_bounds)
-		q_rand.y = np.random.uniform(-1 * y_bounds, y_bounds)
+		q_rand.x = np.random.uniform(x_min, x_max)
+		q_rand.y = np.random.uniform(y_min, y_max)
 	return q_rand
 
 def ExtendNode(P, q):
@@ -85,6 +89,7 @@ def CheckExtension(point_cloud, r, current, desired):
 		projection = V + ((P-V).dot(V_hat)) * V_hat
 
 		if (np.sqrt(projection.dot(projection)) <= r):
+			print "(" + str(current.x) + ", " + str(current.y) + ") to (" + str(desired.x) + ", " + str(desired.y) + ") collided with (" + str(point.x) + ", " + str(point.y) + ")"
 			return False
 
 	return True
