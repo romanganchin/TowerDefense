@@ -6,8 +6,8 @@
 #include <sstream>
 
 #include <eigen3/Eigen/Dense>
-#include <geometry_msgs/Point.h>
 #include <geometry_msgs/Point32.h>
+#include <geometry_msgs/Point.h>
 #include <nav_msgs/Odometry.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <sensor_msgs/PointCloud.h>
@@ -32,7 +32,8 @@
 */
 #include "tower_defense/ObstaclePointCloudSrv.h"
 #include "tower_defense/HurtCreeperSrv.h"
-// #include "tower_defense/ExtendNodeSrv.h"
+#include "tower_defense/MoveCreepersSrv.h"
+#include "tower_defense/MakePathSrv.h"
 // #include "tower_defense/CheckExtensionSrv.h"
 // #include "tower_defense/BuildRRTSrv.h"
 // #include "tower_defense/RRTPlanSrv.h"
@@ -47,8 +48,8 @@
 using Eigen::Matrix3f;
 using Eigen::Vector3f;
 using Eigen::Vector2f;
-using geometry_msgs::Point;
 using geometry_msgs::Point32;
+using geometry_msgs::Point;
 using std::fabs;
 using std::max;
 using std::atan2;
@@ -68,10 +69,11 @@ ros::Publisher filtered_point_cloud_publisher_;
 ros::Publisher point_cloud_publisher_;
 ros::Publisher start_cloud_publisher_;
 ros::Publisher end_cloud_publisher_;
-
+ros::Publisher make_path_publisher;
 //Service callers
 ros::ServiceClient hurt_creeper;
-
+ros::ServiceClient move_creeper;
+ros::ServiceClient get_path_caller;
 // Markers for visualization.
 Marker vertices_marker_;
 Marker qrand_marker_;
@@ -326,14 +328,13 @@ vector<creep> TowerAI(vector<tower> towers, vector<creep> creeps){
    srv.request.damage[i] = (int)sendToHurtCreeperService[i].damageTaken;
    srv.request.location[i] = ConvertVectorToPoint(sendToHurtCreeperService[i].location);
   }
-
+   vector<creep> updatedCreeperLocations;
   if (hurt_creeper.call(srv))
   {
    //not sure if you want the result from the service somewhere else
    //the service returns creeper locations
    //if you want the result somewhere else either make it a global or 
    //just have towerai method return sendtoHurtCreeperService
-   vector<creep> updatedCreeperLocations;
    creep c;
    for(size_t i = 0;i < srv.response.creeper_locations.size();i++){
     c.location = ConvertPointToVector(srv.response.creeper_locations[i]);
@@ -613,9 +614,40 @@ void gameMap(){
   printf("Goal: %f,%f,%f\n", goalPoint.x(), goalPoint.y(), goalPoint.z());
   START = startPoint;
   GOAL = goalPoint;
+
   //Pass the tower cloud and the minimum number of points to make up a tower
   towerFind(towercloud, 100, .05);
   printf("Towers %lu\n", TOWERS.size());
+  //sendto make path service here
+  tower_defense::MakePathSrv srv;
+  
+  //resize
+  srv.request.start = ConvertVectorToPoint(START);
+  srv.request.end = ConvertVectorToPoint(GOAL);
+  srv.request.point_cloud.resize(p.points.size());
+
+  //convert to srv type HurtCreeperSrv
+  for(size_t i = 0; i < p.points.size(); i++){
+   srv.request.point_cloud[i] = ConvertVectorToPoint(p.points[i]);
+  }
+  if (get_path_caller.call(srv))
+  {
+   //not sure if you want the result from the service somewhere else
+   //the service returns creeper locations
+   //if you want the result somewhere else either make it a global or 
+   //just have towerai method return sendtoHurtCreeperService
+  	sensor_msgs::PointCloud make_path;
+    make_path.header.frame_id = "camera_rgb_optical_frame";
+  	make_path.points.resize(srv.response.path.size());
+  	for(size_t i = 0; i < srv.response.path.size(); i++){
+  		make_path.points[i] = srv.response.path[i];
+  	}
+  	make_path_publisher.publish(make_path);
+  }
+  else
+  {
+   ROS_ERROR("Failed to call service make path service");
+  } 
 }
 
 //////////////////////////////////////////////////
@@ -789,13 +821,20 @@ int main(int argc, char **argv) {
 end_cloud_publisher_ =
   n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/EndCloud", 1);
 
+make_path_publisher =
+  	n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/MakePath", 1);
   //this works!
   ros::Subscriber depth_image_subscriber =
     n.subscribe<pcl::PointCloud<pcl::PointXYZRGB> >("/camera/depth_registered/points", 1, KinectCallback);
 
   hurt_creeper =
-  n.serviceClient<tower_defense::HurtCreeperSrv>("/COMPSCI403/HurtCreeper");
+  n.serviceClient<tower_defense::HurtCreeperSrv>("/tower_defense/HurtCreeper");
 
+  move_creeper = 
+  n.serviceClient<tower_defense::MoveCreepersSrv>("/tower_defense/MoveCreeper");
+
+  get_path_caller =
+  n.serviceClient<tower_defense::MakePathSrv>("/tower_defense/MakePath");
   // markers_publisher_ = n.advertise<visualization_msgs::MarkerArray>(
   //     "/COMPSCI403/RRT_Display", 10);
    // gameMap();

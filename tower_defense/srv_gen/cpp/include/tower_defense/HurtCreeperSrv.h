@@ -16,10 +16,10 @@
 
 #include "ros/service_traits.h"
 
-#include "geometry_msgs/Point.h"
+#include "geometry_msgs/Point32.h"
 
 
-#include "geometry_msgs/Point.h"
+#include "geometry_msgs/Point32.h"
 
 namespace tower_defense
 {
@@ -42,8 +42,8 @@ struct HurtCreeperSrvRequest_ {
   typedef std::vector<int32_t, typename ContainerAllocator::template rebind<int32_t>::other >  _damage_type;
   std::vector<int32_t, typename ContainerAllocator::template rebind<int32_t>::other >  damage;
 
-  typedef std::vector< ::geometry_msgs::Point_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point_<ContainerAllocator> >::other >  _location_type;
-  std::vector< ::geometry_msgs::Point_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point_<ContainerAllocator> >::other >  location;
+  typedef std::vector< ::geometry_msgs::Point32_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point32_<ContainerAllocator> >::other >  _location_type;
+  std::vector< ::geometry_msgs::Point32_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point32_<ContainerAllocator> >::other >  location;
 
 
   typedef boost::shared_ptr< ::tower_defense::HurtCreeperSrvRequest_<ContainerAllocator> > Ptr;
@@ -70,8 +70,8 @@ struct HurtCreeperSrvResponse_ {
   {
   }
 
-  typedef std::vector< ::geometry_msgs::Point_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point_<ContainerAllocator> >::other >  _creeper_locations_type;
-  std::vector< ::geometry_msgs::Point_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point_<ContainerAllocator> >::other >  creeper_locations;
+  typedef std::vector< ::geometry_msgs::Point32_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point32_<ContainerAllocator> >::other >  _creeper_locations_type;
+  std::vector< ::geometry_msgs::Point32_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point32_<ContainerAllocator> >::other >  creeper_locations;
 
 
   typedef boost::shared_ptr< ::tower_defense::HurtCreeperSrvResponse_<ContainerAllocator> > Ptr;
@@ -106,12 +106,12 @@ template<class ContainerAllocator>
 struct MD5Sum< ::tower_defense::HurtCreeperSrvRequest_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "d64fbf2e9a23cc8d1d12ddf2371c5286";
+    return "9405ec177ba9539e8cf06f85753d7611";
   }
 
   static const char* value(const  ::tower_defense::HurtCreeperSrvRequest_<ContainerAllocator> &) { return value(); } 
-  static const uint64_t static_value1 = 0xd64fbf2e9a23cc8dULL;
-  static const uint64_t static_value2 = 0x1d12ddf2371c5286ULL;
+  static const uint64_t static_value1 = 0x9405ec177ba9539eULL;
+  static const uint64_t static_value2 = 0x8cf06f85753d7611ULL;
 };
 
 template<class ContainerAllocator>
@@ -129,15 +129,21 @@ struct Definition< ::tower_defense::HurtCreeperSrvRequest_<ContainerAllocator> >
   static const char* value() 
   {
     return "int32[] damage\n\
-geometry_msgs/Point[] location\n\
+geometry_msgs/Point32[] location\n\
 \n\
 ================================================================================\n\
-MSG: geometry_msgs/Point\n\
-# This contains the position of a point in free space\n\
-float64 x\n\
-float64 y\n\
-float64 z\n\
+MSG: geometry_msgs/Point32\n\
+# This contains the position of a point in free space(with 32 bits of precision).\n\
+# It is recommeded to use Point wherever possible instead of Point32.  \n\
+# \n\
+# This recommendation is to promote interoperability.  \n\
+#\n\
+# This message is designed to take up less space when sending\n\
+# lots of points at once, as in the case of a PointCloud.  \n\
 \n\
+float32 x\n\
+float32 y\n\
+float32 z\n\
 ";
   }
 
@@ -158,12 +164,12 @@ template<class ContainerAllocator>
 struct MD5Sum< ::tower_defense::HurtCreeperSrvResponse_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "7ffa2a640d4ccfe609dde436eff0982d";
+    return "8ebb2c96323ccede5f4a491e0b8a8ec2";
   }
 
   static const char* value(const  ::tower_defense::HurtCreeperSrvResponse_<ContainerAllocator> &) { return value(); } 
-  static const uint64_t static_value1 = 0x7ffa2a640d4ccfe6ULL;
-  static const uint64_t static_value2 = 0x09dde436eff0982dULL;
+  static const uint64_t static_value1 = 0x8ebb2c96323ccedeULL;
+  static const uint64_t static_value2 = 0x5f4a491e0b8a8ec2ULL;
 };
 
 template<class ContainerAllocator>
@@ -180,16 +186,22 @@ template<class ContainerAllocator>
 struct Definition< ::tower_defense::HurtCreeperSrvResponse_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "geometry_msgs/Point[] creeper_locations\n\
+    return "geometry_msgs/Point32[] creeper_locations\n\
 \n\
 \n\
 ================================================================================\n\
-MSG: geometry_msgs/Point\n\
-# This contains the position of a point in free space\n\
-float64 x\n\
-float64 y\n\
-float64 z\n\
+MSG: geometry_msgs/Point32\n\
+# This contains the position of a point in free space(with 32 bits of precision).\n\
+# It is recommeded to use Point wherever possible instead of Point32.  \n\
+# \n\
+# This recommendation is to promote interoperability.  \n\
+#\n\
+# This message is designed to take up less space when sending\n\
+# lots of points at once, as in the case of a PointCloud.  \n\
 \n\
+float32 x\n\
+float32 y\n\
+float32 z\n\
 ";
   }
 
@@ -243,7 +255,7 @@ template<>
 struct MD5Sum<tower_defense::HurtCreeperSrv> {
   static const char* value() 
   {
-    return "ab1e0c29d62ef3646b99606e9c08aed0";
+    return "b7fae7efe14208826ad348c6bf418130";
   }
 
   static const char* value(const tower_defense::HurtCreeperSrv&) { return value(); } 
@@ -263,7 +275,7 @@ template<class ContainerAllocator>
 struct MD5Sum<tower_defense::HurtCreeperSrvRequest_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "ab1e0c29d62ef3646b99606e9c08aed0";
+    return "b7fae7efe14208826ad348c6bf418130";
   }
 
   static const char* value(const tower_defense::HurtCreeperSrvRequest_<ContainerAllocator> &) { return value(); } 
@@ -283,7 +295,7 @@ template<class ContainerAllocator>
 struct MD5Sum<tower_defense::HurtCreeperSrvResponse_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "ab1e0c29d62ef3646b99606e9c08aed0";
+    return "b7fae7efe14208826ad348c6bf418130";
   }
 
   static const char* value(const tower_defense::HurtCreeperSrvResponse_<ContainerAllocator> &) { return value(); } 
