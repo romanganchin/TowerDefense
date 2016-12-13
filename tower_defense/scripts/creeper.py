@@ -148,7 +148,7 @@ def MakePathService(req):
 		raw_path.append(rrt[i].location)
 		i = rrt[i].parent
 
-	raw_path = reversed(raw_path)
+	raw_path = raw_path[::-1]
 	path     = []
 	for i in range(len(raw_path)-1):
 		path.append(raw_path[i])
