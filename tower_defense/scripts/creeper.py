@@ -17,7 +17,7 @@ from geometry_msgs.msg import *
 from tower_defense.srv import *
 
 creeper_radius = 1
-path_step_size = 0.01
+path_step_size = 0.5
 creeper_health = 10
 creepers       = [] #each creeper should be [health, index of location in path]
 path           = []
