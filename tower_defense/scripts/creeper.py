@@ -80,7 +80,8 @@ def ExtendNode(P, q):
 
 def CheckExtension(point_cloud, r, current, desired):
 	V     = np.array([desired.x - current.x, desired.y - current.y])
-	V_hat = V / V.dot(V)
+	V_d   = V.dot(V)
+	# V_hat = V / V.dot(V)
 	# V_hat = [-V[1], V[0]]
 	A     = np.array([current.x, current.y])
 
@@ -88,8 +89,8 @@ def CheckExtension(point_cloud, r, current, desired):
 		P = np.array([point.x, point.y])
 		# n = np.array([-P[1], P[0]])
 
-		projection = (A + ((P-A).dot(V_hat)) * V_hat) - P
-
+		# projection = (A + ((P-A).dot(V_hat)) * V_hat) - P
+		projection = (P.dot(V)/V_d)*V
 		# distance = P.dot(V_hat)
 
 		if (np.sqrt(projection.dot(projection)) <= r):
