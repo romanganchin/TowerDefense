@@ -301,7 +301,7 @@ creep getClosestCreep(tower currentTower, vector<creep> creeps){
   }
   return c;
 }
-void TowerAI(vector<tower> towers, vector<creep> creeps){
+vector<creep> TowerAI(vector<tower> towers, vector<creep> creeps){
   //variable for message to send to HurtCreepService
   //HurtCreepService takes 
   //int32[] damage
@@ -340,13 +340,12 @@ void TowerAI(vector<tower> towers, vector<creep> creeps){
     c.damageTaken = 0;
     updatedCreeperLocations.push_back(c);
    }
-
   }
   else
   {
    ROS_ERROR("Failed to call service hurt creeper");
-   //return 1;
   }  
+  return updatedCreeperLocations;
 }
 //Determines the mode of the z coordinates for the SUPERPOINTCLOUD
 float maxOccuringValue(){

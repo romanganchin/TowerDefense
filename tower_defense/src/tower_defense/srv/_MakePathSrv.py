@@ -8,22 +8,28 @@ import struct
 import geometry_msgs.msg
 
 class MakePathSrvRequest(genpy.Message):
-  _md5sum = "9c75c77d7240fe57166d805d761afedf"
+  _md5sum = "ea0496f3f9a3d3f90bd5b9247dd93b86"
   _type = "tower_defense/MakePathSrvRequest"
   _has_header = False #flag to mark the presence of a Header object
-  _full_text = """geometry_msgs/Point[] point_cloud
-geometry_msgs/Point start
-geometry_msgs/Point end
+  _full_text = """geometry_msgs/Point32[] point_cloud
+geometry_msgs/Point32 start
+geometry_msgs/Point32 end
 
 ================================================================================
-MSG: geometry_msgs/Point
-# This contains the position of a point in free space
-float64 x
-float64 y
-float64 z
-"""
+MSG: geometry_msgs/Point32
+# This contains the position of a point in free space(with 32 bits of precision).
+# It is recommeded to use Point wherever possible instead of Point32.  
+# 
+# This recommendation is to promote interoperability.  
+#
+# This message is designed to take up less space when sending
+# lots of points at once, as in the case of a PointCloud.  
+
+float32 x
+float32 y
+float32 z"""
   __slots__ = ['point_cloud','start','end']
-  _slot_types = ['geometry_msgs/Point[]','geometry_msgs/Point','geometry_msgs/Point']
+  _slot_types = ['geometry_msgs/Point32[]','geometry_msgs/Point32','geometry_msgs/Point32']
 
   def __init__(self, *args, **kwds):
     """
@@ -45,13 +51,13 @@ float64 z
       if self.point_cloud is None:
         self.point_cloud = []
       if self.start is None:
-        self.start = geometry_msgs.msg.Point()
+        self.start = geometry_msgs.msg.Point32()
       if self.end is None:
-        self.end = geometry_msgs.msg.Point()
+        self.end = geometry_msgs.msg.Point32()
     else:
       self.point_cloud = []
-      self.start = geometry_msgs.msg.Point()
-      self.end = geometry_msgs.msg.Point()
+      self.start = geometry_msgs.msg.Point32()
+      self.end = geometry_msgs.msg.Point32()
 
   def _get_types(self):
     """
@@ -69,9 +75,9 @@ float64 z
       buff.write(_struct_I.pack(length))
       for val1 in self.point_cloud:
         _x = val1
-        buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
+        buff.write(_get_struct_3f().pack(_x.x, _x.y, _x.z))
       _x = self
-      buff.write(_struct_6d.pack(_x.start.x, _x.start.y, _x.start.z, _x.end.x, _x.end.y, _x.end.z))
+      buff.write(_get_struct_6f().pack(_x.start.x, _x.start.y, _x.start.z, _x.end.x, _x.end.y, _x.end.z))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -84,25 +90,25 @@ float64 z
       if self.point_cloud is None:
         self.point_cloud = None
       if self.start is None:
-        self.start = geometry_msgs.msg.Point()
+        self.start = geometry_msgs.msg.Point32()
       if self.end is None:
-        self.end = geometry_msgs.msg.Point()
+        self.end = geometry_msgs.msg.Point32()
       end = 0
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
       self.point_cloud = []
       for i in range(0, length):
-        val1 = geometry_msgs.msg.Point()
+        val1 = geometry_msgs.msg.Point32()
         _x = val1
         start = end
-        end += 24
-        (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
+        end += 12
+        (_x.x, _x.y, _x.z,) = _get_struct_3f().unpack(str[start:end])
         self.point_cloud.append(val1)
       _x = self
       start = end
-      end += 48
-      (_x.start.x, _x.start.y, _x.start.z, _x.end.x, _x.end.y, _x.end.z,) = _struct_6d.unpack(str[start:end])
+      end += 24
+      (_x.start.x, _x.start.y, _x.start.z, _x.end.x, _x.end.y, _x.end.z,) = _get_struct_6f().unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill
@@ -119,9 +125,9 @@ float64 z
       buff.write(_struct_I.pack(length))
       for val1 in self.point_cloud:
         _x = val1
-        buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
+        buff.write(_get_struct_3f().pack(_x.x, _x.y, _x.z))
       _x = self
-      buff.write(_struct_6d.pack(_x.start.x, _x.start.y, _x.start.z, _x.end.x, _x.end.y, _x.end.z))
+      buff.write(_get_struct_6f().pack(_x.start.x, _x.start.y, _x.start.z, _x.end.x, _x.end.y, _x.end.z))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -135,32 +141,45 @@ float64 z
       if self.point_cloud is None:
         self.point_cloud = None
       if self.start is None:
-        self.start = geometry_msgs.msg.Point()
+        self.start = geometry_msgs.msg.Point32()
       if self.end is None:
-        self.end = geometry_msgs.msg.Point()
+        self.end = geometry_msgs.msg.Point32()
       end = 0
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
       self.point_cloud = []
       for i in range(0, length):
-        val1 = geometry_msgs.msg.Point()
+        val1 = geometry_msgs.msg.Point32()
         _x = val1
         start = end
-        end += 24
-        (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
+        end += 12
+        (_x.x, _x.y, _x.z,) = _get_struct_3f().unpack(str[start:end])
         self.point_cloud.append(val1)
       _x = self
       start = end
-      end += 48
-      (_x.start.x, _x.start.y, _x.start.z, _x.end.x, _x.end.y, _x.end.z,) = _struct_6d.unpack(str[start:end])
+      end += 24
+      (_x.start.x, _x.start.y, _x.start.z, _x.end.x, _x.end.y, _x.end.z,) = _get_struct_6f().unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill
 
 _struct_I = genpy.struct_I
-_struct_6d = struct.Struct("<6d")
-_struct_3d = struct.Struct("<3d")
+def _get_struct_I():
+    global _struct_I
+    return _struct_I
+_struct_3f = None
+def _get_struct_3f():
+    global _struct_3f
+    if _struct_3f is None:
+        _struct_3f = struct.Struct("<3f")
+    return _struct_3f
+_struct_6f = None
+def _get_struct_6f():
+    global _struct_6f
+    if _struct_6f is None:
+        _struct_6f = struct.Struct("<6f")
+    return _struct_6f
 # This Python file uses the following encoding: utf-8
 """autogenerated by genpy from tower_defense/MakePathSrvResponse.msg. Do not edit."""
 import sys
@@ -171,20 +190,27 @@ import struct
 import geometry_msgs.msg
 
 class MakePathSrvResponse(genpy.Message):
-  _md5sum = "b58b29f4d3d5430fc9d5efc2f5262786"
+  _md5sum = "6b486115390018cf18c53ea7f1a78dca"
   _type = "tower_defense/MakePathSrvResponse"
   _has_header = False #flag to mark the presence of a Header object
-  _full_text = """geometry_msgs/Point[] path
+  _full_text = """geometry_msgs/Point32[] path
+
 
 ================================================================================
-MSG: geometry_msgs/Point
-# This contains the position of a point in free space
-float64 x
-float64 y
-float64 z
-"""
+MSG: geometry_msgs/Point32
+# This contains the position of a point in free space(with 32 bits of precision).
+# It is recommeded to use Point wherever possible instead of Point32.  
+# 
+# This recommendation is to promote interoperability.  
+#
+# This message is designed to take up less space when sending
+# lots of points at once, as in the case of a PointCloud.  
+
+float32 x
+float32 y
+float32 z"""
   __slots__ = ['path']
-  _slot_types = ['geometry_msgs/Point[]']
+  _slot_types = ['geometry_msgs/Point32[]']
 
   def __init__(self, *args, **kwds):
     """
@@ -224,7 +250,7 @@ float64 z
       buff.write(_struct_I.pack(length))
       for val1 in self.path:
         _x = val1
-        buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
+        buff.write(_get_struct_3f().pack(_x.x, _x.y, _x.z))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -242,11 +268,11 @@ float64 z
       (length,) = _struct_I.unpack(str[start:end])
       self.path = []
       for i in range(0, length):
-        val1 = geometry_msgs.msg.Point()
+        val1 = geometry_msgs.msg.Point32()
         _x = val1
         start = end
-        end += 24
-        (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
+        end += 12
+        (_x.x, _x.y, _x.z,) = _get_struct_3f().unpack(str[start:end])
         self.path.append(val1)
       return self
     except struct.error as e:
@@ -264,7 +290,7 @@ float64 z
       buff.write(_struct_I.pack(length))
       for val1 in self.path:
         _x = val1
-        buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
+        buff.write(_get_struct_3f().pack(_x.x, _x.y, _x.z))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -283,20 +309,28 @@ float64 z
       (length,) = _struct_I.unpack(str[start:end])
       self.path = []
       for i in range(0, length):
-        val1 = geometry_msgs.msg.Point()
+        val1 = geometry_msgs.msg.Point32()
         _x = val1
         start = end
-        end += 24
-        (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
+        end += 12
+        (_x.x, _x.y, _x.z,) = _get_struct_3f().unpack(str[start:end])
         self.path.append(val1)
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill
 
 _struct_I = genpy.struct_I
-_struct_3d = struct.Struct("<3d")
+def _get_struct_I():
+    global _struct_I
+    return _struct_I
+_struct_3f = None
+def _get_struct_3f():
+    global _struct_3f
+    if _struct_3f is None:
+        _struct_3f = struct.Struct("<3f")
+    return _struct_3f
 class MakePathSrv(object):
   _type          = 'tower_defense/MakePathSrv'
-  _md5sum = 'e7e8c90999c49a7956a41be5569d7437'
+  _md5sum = '9affbb1cb020b95f89d957afa255e3f1'
   _request_class  = MakePathSrvRequest
   _response_class = MakePathSrvResponse

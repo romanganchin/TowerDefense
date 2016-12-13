@@ -175,10 +175,10 @@
   "ab1e0c29d62ef3646b99606e9c08aed0")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<HurtCreeperSrv-response>)))
   "Returns full string definition for message of type '<HurtCreeperSrv-response>"
-  (cl:format cl:nil "geometry_msgs/Point[] creeper_locations~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%~%"))
+  (cl:format cl:nil "geometry_msgs/Point[] creeper_locations~%~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%~%"))
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql 'HurtCreeperSrv-response)))
   "Returns full string definition for message of type 'HurtCreeperSrv-response"
-  (cl:format cl:nil "geometry_msgs/Point[] creeper_locations~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%~%"))
+  (cl:format cl:nil "geometry_msgs/Point[] creeper_locations~%~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%~%"))
 (cl:defmethod roslisp-msg-protocol:serialization-length ((msg <HurtCreeperSrv-response>))
   (cl:+ 0
      4 (cl:reduce #'cl:+ (cl:slot-value msg 'creeper_locations) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ (roslisp-msg-protocol:serialization-length ele))))

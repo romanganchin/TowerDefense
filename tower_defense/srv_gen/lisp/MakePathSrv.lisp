@@ -10,18 +10,18 @@
   ((point_cloud
     :reader point_cloud
     :initarg :point_cloud
-    :type (cl:vector geometry_msgs-msg:Point)
-   :initform (cl:make-array 0 :element-type 'geometry_msgs-msg:Point :initial-element (cl:make-instance 'geometry_msgs-msg:Point)))
+    :type (cl:vector geometry_msgs-msg:Point32)
+   :initform (cl:make-array 0 :element-type 'geometry_msgs-msg:Point32 :initial-element (cl:make-instance 'geometry_msgs-msg:Point32)))
    (start
     :reader start
     :initarg :start
-    :type geometry_msgs-msg:Point
-    :initform (cl:make-instance 'geometry_msgs-msg:Point))
+    :type geometry_msgs-msg:Point32
+    :initform (cl:make-instance 'geometry_msgs-msg:Point32))
    (end
     :reader end
     :initarg :end
-    :type geometry_msgs-msg:Point
-    :initform (cl:make-instance 'geometry_msgs-msg:Point)))
+    :type geometry_msgs-msg:Point32
+    :initform (cl:make-instance 'geometry_msgs-msg:Point32)))
 )
 
 (cl:defclass MakePathSrv-request (<MakePathSrv-request>)
@@ -68,7 +68,7 @@
   (cl:setf (cl:slot-value msg 'point_cloud) (cl:make-array __ros_arr_len))
   (cl:let ((vals (cl:slot-value msg 'point_cloud)))
     (cl:dotimes (i __ros_arr_len)
-    (cl:setf (cl:aref vals i) (cl:make-instance 'geometry_msgs-msg:Point))
+    (cl:setf (cl:aref vals i) (cl:make-instance 'geometry_msgs-msg:Point32))
   (roslisp-msg-protocol:deserialize (cl:aref vals i) istream))))
   (roslisp-msg-protocol:deserialize (cl:slot-value msg 'start) istream)
   (roslisp-msg-protocol:deserialize (cl:slot-value msg 'end) istream)
@@ -82,16 +82,16 @@
   "tower_defense/MakePathSrvRequest")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql '<MakePathSrv-request>)))
   "Returns md5sum for a message object of type '<MakePathSrv-request>"
-  "e7e8c90999c49a7956a41be5569d7437")
+  "9affbb1cb020b95f89d957afa255e3f1")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql 'MakePathSrv-request)))
   "Returns md5sum for a message object of type 'MakePathSrv-request"
-  "e7e8c90999c49a7956a41be5569d7437")
+  "9affbb1cb020b95f89d957afa255e3f1")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<MakePathSrv-request>)))
   "Returns full string definition for message of type '<MakePathSrv-request>"
-  (cl:format cl:nil "geometry_msgs/Point[] point_cloud~%geometry_msgs/Point start~%geometry_msgs/Point end~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%~%"))
+  (cl:format cl:nil "geometry_msgs/Point32[] point_cloud~%geometry_msgs/Point32 start~%geometry_msgs/Point32 end~%~%================================================================================~%MSG: geometry_msgs/Point32~%# This contains the position of a point in free space(with 32 bits of precision).~%# It is recommeded to use Point wherever possible instead of Point32.  ~%# ~%# This recommendation is to promote interoperability.  ~%#~%# This message is designed to take up less space when sending~%# lots of points at once, as in the case of a PointCloud.  ~%~%float32 x~%float32 y~%float32 z~%~%"))
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql 'MakePathSrv-request)))
   "Returns full string definition for message of type 'MakePathSrv-request"
-  (cl:format cl:nil "geometry_msgs/Point[] point_cloud~%geometry_msgs/Point start~%geometry_msgs/Point end~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%~%"))
+  (cl:format cl:nil "geometry_msgs/Point32[] point_cloud~%geometry_msgs/Point32 start~%geometry_msgs/Point32 end~%~%================================================================================~%MSG: geometry_msgs/Point32~%# This contains the position of a point in free space(with 32 bits of precision).~%# It is recommeded to use Point wherever possible instead of Point32.  ~%# ~%# This recommendation is to promote interoperability.  ~%#~%# This message is designed to take up less space when sending~%# lots of points at once, as in the case of a PointCloud.  ~%~%float32 x~%float32 y~%float32 z~%~%"))
 (cl:defmethod roslisp-msg-protocol:serialization-length ((msg <MakePathSrv-request>))
   (cl:+ 0
      4 (cl:reduce #'cl:+ (cl:slot-value msg 'point_cloud) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ (roslisp-msg-protocol:serialization-length ele))))
@@ -111,8 +111,8 @@
   ((path
     :reader path
     :initarg :path
-    :type (cl:vector geometry_msgs-msg:Point)
-   :initform (cl:make-array 0 :element-type 'geometry_msgs-msg:Point :initial-element (cl:make-instance 'geometry_msgs-msg:Point))))
+    :type (cl:vector geometry_msgs-msg:Point32)
+   :initform (cl:make-array 0 :element-type 'geometry_msgs-msg:Point32 :initial-element (cl:make-instance 'geometry_msgs-msg:Point32))))
 )
 
 (cl:defclass MakePathSrv-response (<MakePathSrv-response>)
@@ -147,7 +147,7 @@
   (cl:setf (cl:slot-value msg 'path) (cl:make-array __ros_arr_len))
   (cl:let ((vals (cl:slot-value msg 'path)))
     (cl:dotimes (i __ros_arr_len)
-    (cl:setf (cl:aref vals i) (cl:make-instance 'geometry_msgs-msg:Point))
+    (cl:setf (cl:aref vals i) (cl:make-instance 'geometry_msgs-msg:Point32))
   (roslisp-msg-protocol:deserialize (cl:aref vals i) istream))))
   msg
 )
@@ -159,16 +159,16 @@
   "tower_defense/MakePathSrvResponse")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql '<MakePathSrv-response>)))
   "Returns md5sum for a message object of type '<MakePathSrv-response>"
-  "e7e8c90999c49a7956a41be5569d7437")
+  "9affbb1cb020b95f89d957afa255e3f1")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql 'MakePathSrv-response)))
   "Returns md5sum for a message object of type 'MakePathSrv-response"
-  "e7e8c90999c49a7956a41be5569d7437")
+  "9affbb1cb020b95f89d957afa255e3f1")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<MakePathSrv-response>)))
   "Returns full string definition for message of type '<MakePathSrv-response>"
-  (cl:format cl:nil "geometry_msgs/Point[] path~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%~%"))
+  (cl:format cl:nil "geometry_msgs/Point32[] path~%~%~%================================================================================~%MSG: geometry_msgs/Point32~%# This contains the position of a point in free space(with 32 bits of precision).~%# It is recommeded to use Point wherever possible instead of Point32.  ~%# ~%# This recommendation is to promote interoperability.  ~%#~%# This message is designed to take up less space when sending~%# lots of points at once, as in the case of a PointCloud.  ~%~%float32 x~%float32 y~%float32 z~%~%"))
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql 'MakePathSrv-response)))
   "Returns full string definition for message of type 'MakePathSrv-response"
-  (cl:format cl:nil "geometry_msgs/Point[] path~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%~%"))
+  (cl:format cl:nil "geometry_msgs/Point32[] path~%~%~%================================================================================~%MSG: geometry_msgs/Point32~%# This contains the position of a point in free space(with 32 bits of precision).~%# It is recommeded to use Point wherever possible instead of Point32.  ~%# ~%# This recommendation is to promote interoperability.  ~%#~%# This message is designed to take up less space when sending~%# lots of points at once, as in the case of a PointCloud.  ~%~%float32 x~%float32 y~%float32 z~%~%"))
 (cl:defmethod roslisp-msg-protocol:serialization-length ((msg <MakePathSrv-response>))
   (cl:+ 0
      4 (cl:reduce #'cl:+ (cl:slot-value msg 'path) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ (roslisp-msg-protocol:serialization-length ele))))

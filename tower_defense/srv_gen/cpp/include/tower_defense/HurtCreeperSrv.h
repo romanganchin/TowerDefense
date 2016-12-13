@@ -182,6 +182,7 @@ struct Definition< ::tower_defense::HurtCreeperSrvResponse_<ContainerAllocator> 
   {
     return "geometry_msgs/Point[] creeper_locations\n\
 \n\
+\n\
 ================================================================================\n\
 MSG: geometry_msgs/Point\n\
 # This contains the position of a point in free space\n\

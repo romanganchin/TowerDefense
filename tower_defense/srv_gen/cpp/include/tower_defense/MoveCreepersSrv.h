@@ -19,7 +19,7 @@
 #include "std_msgs/Bool.h"
 
 
-#include "geometry_msgs/Point.h"
+#include "geometry_msgs/Point32.h"
 #include "std_msgs/Bool.h"
 
 namespace tower_defense
@@ -68,8 +68,8 @@ struct MoveCreepersSrvResponse_ {
   {
   }
 
-  typedef std::vector< ::geometry_msgs::Point_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point_<ContainerAllocator> >::other >  _creeper_locations_type;
-  std::vector< ::geometry_msgs::Point_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point_<ContainerAllocator> >::other >  creeper_locations;
+  typedef std::vector< ::geometry_msgs::Point32_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point32_<ContainerAllocator> >::other >  _creeper_locations_type;
+  std::vector< ::geometry_msgs::Point32_<ContainerAllocator> , typename ContainerAllocator::template rebind< ::geometry_msgs::Point32_<ContainerAllocator> >::other >  creeper_locations;
 
   typedef  ::std_msgs::Bool_<ContainerAllocator>  _reached_end_type;
    ::std_msgs::Bool_<ContainerAllocator>  reached_end;
@@ -155,12 +155,12 @@ template<class ContainerAllocator>
 struct MD5Sum< ::tower_defense::MoveCreepersSrvResponse_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "6b405f1ffe0a958f76f1a9485c4fb14b";
+    return "b02158e175ba8c2df2cd467c4f121a56";
   }
 
   static const char* value(const  ::tower_defense::MoveCreepersSrvResponse_<ContainerAllocator> &) { return value(); } 
-  static const uint64_t static_value1 = 0x6b405f1ffe0a958fULL;
-  static const uint64_t static_value2 = 0x76f1a9485c4fb14bULL;
+  static const uint64_t static_value1 = 0xb02158e175ba8c2dULL;
+  static const uint64_t static_value2 = 0xf2cd467c4f121a56ULL;
 };
 
 template<class ContainerAllocator>
@@ -177,17 +177,23 @@ template<class ContainerAllocator>
 struct Definition< ::tower_defense::MoveCreepersSrvResponse_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "geometry_msgs/Point[] creeper_locations\n\
+    return "geometry_msgs/Point32[] creeper_locations\n\
 std_msgs/Bool reached_end\n\
 \n\
 \n\
 ================================================================================\n\
-MSG: geometry_msgs/Point\n\
-# This contains the position of a point in free space\n\
-float64 x\n\
-float64 y\n\
-float64 z\n\
+MSG: geometry_msgs/Point32\n\
+# This contains the position of a point in free space(with 32 bits of precision).\n\
+# It is recommeded to use Point wherever possible instead of Point32.  \n\
+# \n\
+# This recommendation is to promote interoperability.  \n\
+#\n\
+# This message is designed to take up less space when sending\n\
+# lots of points at once, as in the case of a PointCloud.  \n\
 \n\
+float32 x\n\
+float32 y\n\
+float32 z\n\
 ================================================================================\n\
 MSG: std_msgs/Bool\n\
 bool data\n\
@@ -244,7 +250,7 @@ template<>
 struct MD5Sum<tower_defense::MoveCreepersSrv> {
   static const char* value() 
   {
-    return "f428434760fd966922080bb0858f16a6";
+    return "e2834ea2353683ade5972a04f8673e55";
   }
 
   static const char* value(const tower_defense::MoveCreepersSrv&) { return value(); } 
@@ -264,7 +270,7 @@ template<class ContainerAllocator>
 struct MD5Sum<tower_defense::MoveCreepersSrvRequest_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "f428434760fd966922080bb0858f16a6";
+    return "e2834ea2353683ade5972a04f8673e55";
   }
 
   static const char* value(const tower_defense::MoveCreepersSrvRequest_<ContainerAllocator> &) { return value(); } 
@@ -284,7 +290,7 @@ template<class ContainerAllocator>
 struct MD5Sum<tower_defense::MoveCreepersSrvResponse_<ContainerAllocator> > {
   static const char* value() 
   {
-    return "f428434760fd966922080bb0858f16a6";
+    return "e2834ea2353683ade5972a04f8673e55";
   }
 
   static const char* value(const tower_defense::MoveCreepersSrvResponse_<ContainerAllocator> &) { return value(); } 
