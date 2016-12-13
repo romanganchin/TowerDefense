@@ -1,5 +1,5 @@
-geometry_msgs/Point[] point_cloud
-geometry_msgs/Point start
-geometry_msgs/Point end
+geometry_msgs/Point32] point_cloud
+geometry_msgs/Point32 start
+geometry_msgs/Point32 end
 ---
-geometry_msgs/Point[] path
+geometry_msgs/Point32[] path

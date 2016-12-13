@@ -1,4 +1,4 @@
 std_msgs/Bool create_new
 ---
-geometry_msgs/Point[] creeper_locations
+geometry_msgs/Point32[] creeper_locations
 std_msgs/Bool reached_end

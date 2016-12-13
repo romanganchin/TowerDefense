@@ -27,7 +27,7 @@ x_bounds = 0.5
 y_bounds = 0.43
 
 class RRTNode():
-	location = Point()
+	location = Point32()
 	parent   = -1
 
 def RandomConfig(goal):
@@ -36,7 +36,7 @@ def RandomConfig(goal):
 	global x_bounds
 	global y_bounds
 
-	q_rand = Point()
+	q_rand = Point32()
 	if RandomValue(0, 1) <= 0.05:
 		q_rand.x = goal.x
 		q_rand.y = goal.y
@@ -48,7 +48,7 @@ def RandomConfig(goal):
 def ExtendNode(P, q):
 	delta_q = 0.5
 
-	q_new   = Point()
+	q_new   = Point32()
 	goal    = np.array([q.x, q.y])
 	points  = np.array([[bad_point.x, bad_point.y] for bad_point in P])
 	lengths = [np.linalg.norm(point-goal) for point in points]
@@ -143,7 +143,7 @@ def MakePathService(req):
 
 		while current_len < current_max:
 			new_point = current_start + hat_vector * current_len
-			p         = Point()
+			p         = Point32()
 			p.x       = new_point[0]
 			p.y       = new_point[1]
 
