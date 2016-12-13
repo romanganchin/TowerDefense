@@ -103,6 +103,8 @@ def MakePathService(req):
 	global path_step_size
 	global creeper_radius
 
+	path = []
+
 	p     = req.point_cloud
 	start = req.start
 	goal  = req.end
