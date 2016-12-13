@@ -26,6 +26,11 @@ max_value      = 4
 x_bounds = 0.5
 y_bounds = 0.43
 
+# Return a random value between min and max.
+def RandomValue(min_value, max_value):
+  return np.random.uniform(min_value, max_value)
+
+
 class RRTNode():
 	location = Point32()
 	parent   = -1
