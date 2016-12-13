@@ -89,7 +89,7 @@ def CheckExtension(point_cloud, r, current, desired):
 		projection = V + ((P-V).dot(V_hat)) * V_hat
 
 		if (np.sqrt(projection.dot(projection)) <= r):
-			print "(" + str(current.x) + ", " + str(current.y) + ") to (" + str(desired.x) + ", " + str(desired.y) + ") collided with (" + str(point.x) + ", " + str(point.y) + ")"
+			# print "(" + str(current.x) + ", " + str(current.y) + ") to (" + str(desired.x) + ", " + str(desired.y) + ") collided with (" + str(point.x) + ", " + str(point.y) + ")"
 			return False
 
 	return True
@@ -124,7 +124,7 @@ def MakePathService(req):
 		q_near      = raw_points[q_i]
 
 		while not CheckExtension(p, creeper_radius, q_near, q_new):
-			print "finding some new points..."
+			# print "finding some new points..."
 			# print q_new
 			q_rand      = RandomConfig(goal)
 			q_i, q_new  = ExtendNode(raw_points, q_rand)
