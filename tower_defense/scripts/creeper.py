@@ -174,7 +174,7 @@ def MakePathService(req):
 	for p in path:
 		print p
 
-	return MakePathServiceResponse(path)
+	return MakePathSrvResponse(path)
 
 #every time this is called the creepers will all move forward one step
 #create_new = True -> put a new creeper at the start point
