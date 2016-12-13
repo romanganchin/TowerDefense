@@ -9,7 +9,7 @@ How to use this node:
 4) Repeat 2 and 3 every timestep in whatever order makes the most sense
 """
 
-import numpy
+import numpy as np
 import random
 import rospy
 import roslib; roslib.load_manifest('tower_defense')
