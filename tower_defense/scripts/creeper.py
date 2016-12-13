@@ -51,7 +51,7 @@ def RandomConfig(goal):
 	return q_rand
 
 def ExtendNode(P, q):
-	delta_q = 0.5
+	delta_q = 0.06
 
 	q_new   = Point32()
 	goal    = np.array([q.x, q.y])
@@ -118,7 +118,7 @@ def MakePathService(req):
 
 		while not CheckExtension(p, creeper_radius, q_near, q_new):
 			print "finding some new points..."
-			print q_new
+			# print q_new
 			q_rand      = RandomConfig(goal)
 			q_i, q_new  = ExtendNode(raw_points, q_rand)
 			q_near      = raw_points[q_i]
