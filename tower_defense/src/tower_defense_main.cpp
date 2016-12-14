@@ -71,6 +71,7 @@ ros::Publisher start_cloud_publisher_;
 ros::Publisher end_cloud_publisher_;
 ros::Publisher make_path_publisher;
 ros::Publisher my_path_publisher_;
+ros::Publisher my_points_publisher_;
 //Service callers
 ros::ServiceClient hurt_creeper;
 ros::ServiceClient move_creeper;
@@ -204,7 +205,7 @@ Point VectorToPoint(const Vector3f& v) {
   Point point;
   point.x = v.x();
   point.y = v.y();
-  point.z = 0;
+  point.z = v.z();
   return point;
 }
 
@@ -223,41 +224,41 @@ void DrawLine(const Vector3f& p1,
 
 // Initialize all markers.
 void InitMarkers() {
-  vertices_marker_.header.frame_id = "map";
+  vertices_marker_.header.frame_id = "camera_rgb_optical_frame";
   vertices_marker_.id = 1;
   vertices_marker_.type = Marker::POINTS;
   vertices_marker_.action = Marker::MODIFY;
-  vertices_marker_.scale.x = 0.2;
-  vertices_marker_.scale.y = 0.2;
+  vertices_marker_.scale.x = 0.01;
+  vertices_marker_.scale.y = 0.01;
   vertices_marker_.color.a = 1.0;
   vertices_marker_.color.r = 0.0;
   vertices_marker_.color.g = 0.0;
   vertices_marker_.color.b = 1.0;
 
 
-  qrand_marker_.header.frame_id = "map";
+  qrand_marker_.header.frame_id = "camera_rgb_optical_frame";
   qrand_marker_.id = 2;
   qrand_marker_.type = Marker::POINTS;
   qrand_marker_.action = Marker::MODIFY;
-  qrand_marker_.scale.x = 0.2;
-  qrand_marker_.scale.y = 0.2;
+  qrand_marker_.scale.x = 0.005;
+  qrand_marker_.scale.y = 0.005;
   qrand_marker_.color.a = 1.0;
   qrand_marker_.color.r = 1.0;
   qrand_marker_.color.g = 0.0;
   qrand_marker_.color.b = 0.0;
 
-  edges_marker_.header.frame_id = "map";
+  edges_marker_.header.frame_id = "camera_rgb_optical_frame";
   edges_marker_.id = 3;
   edges_marker_.type = Marker::LINE_LIST;
   edges_marker_.action = Marker::MODIFY;
-  edges_marker_.scale.x = 0.05;
-  edges_marker_.scale.y = 0.05;
+  edges_marker_.scale.x = 0.01;
+  edges_marker_.scale.y = 0.01;
   edges_marker_.color.a = 1.0;
   edges_marker_.color.r = 0.0;
   edges_marker_.color.g = 1.0;
   edges_marker_.color.b = 0.0;
 
-  map_marker_.header.frame_id = "map";
+  map_marker_.header.frame_id = "camera_rgb_optical_frame";
   map_marker_.id = 4;
   map_marker_.type = Marker::LINE_LIST;
   map_marker_.action = Marker::MODIFY;
@@ -268,7 +269,7 @@ void InitMarkers() {
   map_marker_.color.g = 1.0;
   map_marker_.color.b = 1.0;
 
-  plan_marker_.header.frame_id = "map";
+  plan_marker_.header.frame_id = "camera_rgb_optical_frame";
   plan_marker_.id = 5;
   plan_marker_.type = Marker::LINE_LIST;
   plan_marker_.action = Marker::MODIFY;
@@ -312,57 +313,97 @@ creep getClosestCreep(tower currentTower, vector<creep> creeps){
   }
   return c;
 }
-vector<Vector3f> GetPointsToConsider(Vector3f current, vector<Vector3f> possibleLocations){
+/*
+* This is working gets all the points within a certain radius
+*/
+vector<Vector3f> GetPointsToConsider(TreeNode current, vector<Vector3f> possibleLocations){
 	vector<Vector3f> pointsToConsider;
-	float distance = .1;
+	float distance = .025;
 	for(size_t i = 0; i<possibleLocations.size(); i++){
-		if(distanceBetweenTwoPoints(current, possibleLocations[i])<=distance){
+		if(distanceBetweenTwoPoints(current.location, possibleLocations[i])<=distance){
 			pointsToConsider.push_back(possibleLocations[i]);
 		}
 	}
-	printf("got to the points to consider\n");
-    sensor_msgs::PointCloud my_path_cloud;
-    my_path_cloud.header.frame_id = "camera_rgb_optical_frame";
-    my_path_cloud.points.resize(pointsToConsider.size());
-    for(size_t i = 0; i < pointsToConsider.size(); i++){
-   		my_path_cloud.points[i] = ConvertVectorToPoint(pointsToConsider[i]);
-    }
-    my_path_publisher_.publish(my_path_cloud);
+	//printf("got to the points to consider\n");
 	return pointsToConsider;
 }
-Vector3f GetPointClosestToGoal(vector<Vector3f> pointsToConsider){
-  float closestDistance = distanceBetweenTwoPoints(GOAL, pointsToConsider[0]);
-  float currentDistance = closestDistance;
-  Vector3f c = START;
-  printf("points to consider Size%lu \n", pointsToConsider.size());
-  for(size_t i = 0; i < pointsToConsider.size(); i++){
-    currentDistance = distanceBetweenTwoPoints(GOAL, pointsToConsider[i]);
-    if(currentDistance < closestDistance){
-      closestDistance = currentDistance;
-      c = pointsToConsider[i];
+TreeNode GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoal){
+	//print points to Consider should be radius + already seen points
+	sensor_msgs::PointCloud my_points_cloud;
+    my_points_cloud.header.frame_id = "camera_rgb_optical_frame";
+    my_points_cloud.points.resize(pointsToConsider.size());
+    for(size_t i = 0; i < pointsToConsider.size(); i++){
+   		my_points_cloud.points[i] = ConvertVectorToPoint(pointsToConsider[i]);
     }
-  }
-  printf("c.x %f, c.y %f c.z %f\n", c.x(), c.y(), c.z());
-  return c;
+    my_points_publisher_.publish(my_points_cloud);
+
+      float random = RandomValue(0,1);
+      Vector3f g;
+	  if(random < .6){
+	  	g = myGoal;
+	  }
+	  else{
+	  	g.x() = RandomValue(-0.5, .5);
+	  	g.y() = RandomValue(-.5, .5);
+	  	g.z() = MODEZ;
+	  }
+	  float closestDistance = distanceBetweenTwoPoints(g, pointsToConsider[0]);
+	  float currentDistance = closestDistance;
+	  TreeNode c(Vector3f(0,0,MODEZ),-1);
+	  //printf("points to consider Size%lu \n", pointsToConsider.size());
+	  for(size_t i = 0; i < pointsToConsider.size(); i++){
+	  	// if(pointsToConsider[i] == GOAL){
+	  	// 	c.pointsToConsider[i];
+	  	// }
+	    currentDistance = distanceBetweenTwoPoints(g, pointsToConsider[i]);
+
+	    if(currentDistance <= closestDistance){
+	      closestDistance = currentDistance;
+	      c.location = pointsToConsider[i];
+	      c.parent = i;
+	    }
+	  }
+  	return c;
 }
-vector<TreeNode> MakePath(vector<Vector3f> possibleLocations){
+
+vector<TreeNode> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector3f g){
+	MarkerArray markers;
+    plan_marker_.points.clear();
 	printf("making path \n");
 	vector<TreeNode> pointsOnPath;
-	Vector3f current = START;
-	TreeNode temp(current, -1);
+
+	TreeNode current(s, -1);
+	TreeNode temp(s, -1);
+	printf("disance between goal and start %f \n", distanceBetweenTwoPoints(g, current.location));
 	pointsOnPath.push_back(temp);
 	vector<Vector3f> pointsToConsider;
-	int parentIndex = 0;
-	while(current != GOAL){
+	bool not_reached_goal = true;
+	int counter = 0;
+	while(not_reached_goal  && counter < 10000){
+		//get all points within a certain radius of the current location that are valid points
 		pointsToConsider = GetPointsToConsider(current, possibleLocations);
-		current = GetPointClosestToGoal(pointsToConsider);
-		temp.location = current;
-		temp.parent = parentIndex;
-		parentIndex++;
-		pointsOnPath.push_back(temp);     
-        //DrawLine(temp.location, pointsOnPath[temp.parent].location, &plan_marker_);
+		for(size_t i = 0; i < pointsOnPath.size(); i++){
+			pointsToConsider.push_back(pointsOnPath[i].location);
+		}
+		//index = NearestVertex()
+		current = GetPointClosestToGoal(pointsToConsider, g);
+		DrawLine(current.location, pointsToConsider[current.parent], &edges_marker_);
+		temp = current;
+		pointsOnPath.push_back(temp); 
+		if(.01 > distanceBetweenTwoPoints(g, current.location)){
+            not_reached_goal = false;
+        }
+        counter++;
 	}
+	printf("disance between goal and start %f \n", distanceBetweenTwoPoints(g, current.location));
 	printf("got to the publisher\n");
+	printf("got to the publisher\n");
+	for(size_t i = 0; i < pointsOnPath.size(); i++){
+		//DrawLine(pointsOnPath[i].location, pointsOnPath[i+1].location, &plan_marker_);
+		plan_marker_.points.push_back(VectorToPoint(pointsOnPath[i].location));
+	}
+	markers.markers.push_back(plan_marker_);
+	markers_publisher_.publish(markers);
     sensor_msgs::PointCloud my_path_cloud;
     my_path_cloud.header.frame_id = "camera_rgb_optical_frame";
     my_path_cloud.points.resize(pointsOnPath.size());
@@ -507,7 +548,7 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
 			start_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
 			}
 			if(p.colors[i].x() > 180 && p.colors[i].y() < 100 && p.colors[i].z() < 100){
-			end_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
+				end_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
 			}
 		}
     }
@@ -515,13 +556,30 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
     for(size_t i = 0; i< pointsSendingForRequest.size();i++){
     	srv.request.point_cloud[i] = ConvertVectorToPoint(pointsSendingForRequest[i]);
     }
-    gameMap();
-    //MakePath(possibleLocations);
+
+    if(_make_path_check){
+	   	_make_path_check = false;
+	    gameMap();
+	    //end_cloud.points[0] = ConvertVectorToPoint(GOAL);
+    	
+	    possibleLocations.push_back(START);
+	    possibleLocations.push_back(GOAL);
+	    Vector3f s = START;
+	    Vector3f g = GOAL;
+	    vector<TreeNode> pathTree = MakePath(possibleLocations, s, g);
+	    vector<Vector3f> path;
+	    for(size_t i = 0; i < pathTree.size(); i++){
+	    	path.push_back(pathTree[i].location);
+	    }
+
+	    MakePath(path, g, s);
+	}
     ground_cloud.points[p.points.size()-2] = (ConvertVectorToPoint(START));
     ground_cloud.points[p.points.size()-1] = (ConvertVectorToPoint(GOAL));
     filtered_point_cloud_publisher_.publish(ground_cloud);
     start_cloud_publisher_.publish(start_cloud);
     end_cloud_publisher_.publish(end_cloud);
+    //end_cloud_publisher_.publish();
     point_cloud_publisher_.publish(publish_cloud);
       /*printf("XYZ:%f,%f,%f RGB:%f,%f,%f \n", 
         p.points[i].x(),p.points[i].y(), p.points[i].z(),
@@ -766,8 +824,8 @@ void gameMap(){
 
   printf("Start: %f,%f,%f\n", startPoint.x(), startPoint.y(), startPoint.z());
   printf("Goal: %f,%f,%f\n", goalPoint.x(), goalPoint.y(), goalPoint.z());
-  START = startPoint;
-  GOAL = goalPoint;
+  START = goalPoint;
+  GOAL = startPoint;
 
   //Pass the tower cloud and the minimum number of points to make up a tower
   towerFind(towercloud, 100, .05);
@@ -934,6 +992,9 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "camera_rgb_optical_frame");
   ros::NodeHandle n;
 
+markers_publisher_ = n.advertise<visualization_msgs::MarkerArray>(
+  "/COMPSCI403/RRT_Display", 10);
+
   filtered_point_cloud_publisher_ = 
     n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/FilteredPointCloud", 1);
 
@@ -951,6 +1012,8 @@ make_path_publisher =
 
   my_path_publisher_ = 
   	n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/MyPath", 1);
+  	my_points_publisher_ =
+  	n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/MyPoints", 1);
   //this works!
   ros::Subscriber depth_image_subscriber =
     n.subscribe<pcl::PointCloud<pcl::PointXYZRGB> >("/camera/depth_registered/points", 1, KinectCallback);
