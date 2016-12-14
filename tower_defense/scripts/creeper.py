@@ -196,7 +196,7 @@ def MakePathService(req):
 
 
 	print "here are the points"
-	for p in raw_pointspath:
+	for p in raw_points:
 		print p
 
 	return MakePathSrvResponse(raw_path)
