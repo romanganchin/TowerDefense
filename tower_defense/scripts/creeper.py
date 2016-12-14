@@ -112,7 +112,7 @@ def CheckExtension(point_cloud, r, current, desired):
 			print "(" + str(current.x) + ", " + str(current.y) + ") to (" + str(desired.x) + ", " + str(desired.y) + ") collided with (" + str(point.x) + ", " + str(point.y) + ")"
 			return False
 
-	 return True
+	return True
 
 def CheckExtension(point_cloud, r, current, desired):
 	delta_q = 0.001
