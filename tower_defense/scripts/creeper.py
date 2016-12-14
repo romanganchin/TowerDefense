@@ -82,6 +82,9 @@ def ExtendNode(P, q):
 	q_new.x  = new_goal[0]
 	q_new.y  = new_goal[1]
 
+	# new_lengths = [np.linalg.norm(point-goal) for point in points]
+	# new_index   = np.argmin(new_lengths)
+
 	return q_near_index, q_new
 
 
@@ -109,9 +112,10 @@ def ExtendNode(P, q):
 #	 return True
 
 def CheckExtension(point_cloud, r, current, desired):
-	delta_q = 0.06
-	V = np.array([desired.x - current.x, desired.y - current.y])
-	return np.sqrt(V.dot(V)) <= 0.06
+	# delta_q = 0.06
+	# V = np.array([desired.x - current.x, desired.y - current.y])
+	# return np.sqrt(V.dot(V)) > 0.06
+	return True
 
 #returns a list of points, which are the steps the creepers take at each timestep
 #the path coords should only be used by this node, but might be useful for something
