@@ -142,6 +142,7 @@ def MakePathService(req):
 	path = []
 
 	p     = req.point_cloud
+	print len(p)
 	start = req.start
 	goal  = req.end
 
@@ -152,8 +153,9 @@ def MakePathService(req):
 
 	current_point = start
 
-	while np.sqrt((current_point.x - goal.x)**2 + (current_point.y - goal.y)**2) > 0.001:
+	while np.sqrt((current_point.x - goal.x)**2 + (current_point.y - goal.y)**2) > 0.06:
 		print "looking at a point..."
+		print len(p)
 		raw_points  = [rr.location for rr in rrt]
 		q_rand      = RandomConfig(goal, raw_points)
 		q_i, q_new  = ExtendNode(raw_points, q_rand)
