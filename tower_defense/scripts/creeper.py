@@ -93,22 +93,18 @@ def ExtendNode(P, q):
 def CheckExtension(point_cloud, r, current, desired):
 	V     = np.array([desired.x - current.x, desired.y - current.y])
 	V_hat = V / V.dot(V)
+	V_n   = np.array([-1 * V_hat[1], V_hat[0]])
 	V_d   = V_hat.dot(V_hat)
-	# V_hat = V / V.dot(V)
-	# V_hat = [-V[1], V[0]]
-	A     = np.array([current.x, current.y])
 
 	for point in point_cloud:
-		P = np.array([point.x, point.y])
-		# n = np.array([-P[1], P[0]])
-		#print str(point.x) + " " + str(point.y)
-		# projection = (A + ((P-A).dot(V_hat)) * V_hat) - P
-		projection = (P.dot(V_hat)/V_d)*V_hat
-		p_vector   = (P - projection) - np.array([current.x, current.y])
-		# distance = P.dot(V_hat)
-		#print "projection " + str(np.sqrt(projection.dot(projection))) + " r " + str(r)
-		if (np.sqrt(projection.dot(projection)) <= r):
-		# if (abs(distance) <= r):
+		P = np.array([point.x - current.x, point.y - current.y])
+
+		# projection = (P.dot(V_hat)/V_d)*V_hat
+		# p_vector   = (P - projection) - np.array([current.x, current.y])
+		projection   = abs(P.dot(V_hat))
+
+		# if (np.sqrt(projection.dot(projection)) <= r):
+		if (projection <= r)
 			print "(" + str(current.x) + ", " + str(current.y) + ") to (" + str(desired.x) + ", " + str(desired.y) + ") collided with (" + str(point.x) + ", " + str(point.y) + ")"
 			return False
 
