@@ -79,11 +79,13 @@ def ExtendNode(P, q):
 	else:
 		new_goal = goal
 
-	q_new.x  = new_goal[0]
-	q_new.y  = new_goal[1]
+	# q_new.x  = new_goal[0]
+	# q_new.y  = new_goal[1]
 
-	# new_lengths = [np.linalg.norm(point-goal) for point in points]
-	# new_index   = np.argmin(new_lengths)
+	new_lengths = [np.linalg.norm(point-goal) for point in points]
+	new_index   = np.argmin(new_lengths)
+	q_new.x     = points[new_index][0]
+	q_new.y     = points[new_index][1]	
 
 	return q_near_index, q_new
 
