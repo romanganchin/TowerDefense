@@ -137,6 +137,7 @@ def MakePathService(req):
 	p     = [point for point in p if not point.x == 0 and not point.y == 0]
 	print len(p)
 	start = req.start
+	start.z = 0
 	goal  = req.end
 
 	first_rrt = RRTNode()
