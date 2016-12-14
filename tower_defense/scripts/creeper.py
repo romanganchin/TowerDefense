@@ -173,31 +173,31 @@ def MakePathService(req):
 
 	raw_path = raw_path[::-1]
 	path     = []
-	for i in range(len(raw_path)-1):
-		path.append(raw_path[i])
+	# for i in range(len(raw_path)-1):
+	# 	path.append(raw_path[i])
 
-		current_start = np.array([raw_path[i].x, raw_path[i].y])
-		current_end   = np.array([raw_path[i+1].x, raw_path[i+1].y])
-		path_vector   = current_end - current_start
-		hat_vector    = path_vector / path_vector.dot(path_vector)
-		current_len   = path_step_size
-		current_max   = path_vector.dot(path_vector)
+	# 	current_start = np.array([raw_path[i].x, raw_path[i].y])
+	# 	current_end   = np.array([raw_path[i+1].x, raw_path[i+1].y])
+	# 	path_vector   = current_end - current_start
+	# 	hat_vector    = path_vector / path_vector.dot(path_vector)
+	# 	current_len   = path_step_size
+	# 	current_max   = path_vector.dot(path_vector)
 
-		while current_len < current_max:
-			new_point = current_start + hat_vector * current_len
-			p         = Point32()
-			p.x       = new_point[0]
-			p.y       = new_point[1]
+	# 	while current_len < current_max:
+	# 		new_point = current_start + hat_vector * current_len
+	# 		p         = Point32()
+	# 		p.x       = new_point[0]
+	# 		p.y       = new_point[1]
 
-			path.append(p)
-			current_len += path_step_size
+	# 		path.append(p)
+	# 		current_len += path_step_size
 
 
 	print "here are the points"
 	for p in path:
 		print p
 
-	return MakePathSrvResponse(path)
+	return MakePathSrvResponse(raw_path)
 
 #every time this is called the creepers will all move forward one step
 #create_new = True -> put a new creeper at the start point
