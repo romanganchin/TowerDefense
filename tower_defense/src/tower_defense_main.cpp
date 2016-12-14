@@ -107,7 +107,7 @@ float px = 320;
 float py = 240;
 float a = 3.008;
 float b = -0.002745;
-
+bool _make_path_check = true;
 
 //////////////////////////////////////////////////
 //              DATA STRUCTURES                //
@@ -382,10 +382,12 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
   POINTCLOUD.colors.clear(); 
 
    BOOST_FOREACH (const pcl::PointXYZRGB& pt, pointcloud->points){
-      Vector3f point(pt.x, pt.y, pt.z);
-      Vector3f color((float) pt.r, (float)pt.g, (float)pt.b);
-      POINTCLOUD.points.push_back(point);
-      POINTCLOUD.colors.push_back(color);
+   	  if(isnan(pt.x) == 0 && isnan(pt.y) == 0 && isnan(pt.z) == 0){
+	      Vector3f point(pt.x, pt.y, pt.z);
+	      Vector3f color((float) pt.r, (float)pt.g, (float)pt.b);
+	      POINTCLOUD.points.push_back(point);
+	      POINTCLOUD.colors.push_back(color);
+  		}
      // printf("%f, %d, %d\n", (float)pt.r, pt.g, pt.b);
     }
     //use this ounce to find the z value for the base plane with the intial settup
@@ -407,19 +409,28 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
     end_cloud.header.frame_id = "camera_rgb_optical_frame";
     end_cloud.points.resize(p.points.size());
 
+    sensor_msgs::PointCloud ground_cloud;
+    ground_cloud.header.frame_id = "camera_rgb_optical_frame";
+    ground_cloud.points.resize(p.points.size());
     for(size_t i = 0; i < p.points.size(); i++){
       //if(p.points[i].z() <= 1.036 || p.points[i].z() >=1.016)
       //z value for recorded bag files 1.026
       //found z value - .01
-      if(p.points[i].z() <=1.016)
-          publish_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
-        if(p.colors[i].x() < 100 && p.colors[i].y() < 100 && p.colors[i].z() > 180){
-          start_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
-        }
-        if(p.colors[i].x() > 180 && p.colors[i].y() < 100 && p.colors[i].z() < 100){
-          end_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
-        }
+      if(isnan(p.points[i].x()) == 0 && isnan(p.points[i].y()) == 0 && isnan(p.points[i].z()) == 0){
+	      if(p.points[i].z() > MODEZ-.05 && p.points[i].z() < MODEZ+.05){
+	      	ground_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
+	      }
+	      if(p.points[i].z() <=MODEZ-.05)
+	          publish_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
+	        if(p.colors[i].x() < 100 && p.colors[i].y() < 100 && p.colors[i].z() > 180){
+	          start_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
+	        }
+	        if(p.colors[i].x() > 180 && p.colors[i].y() < 100 && p.colors[i].z() < 100){
+	          end_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
+	        }
+	    }
     }
+    filtered_point_cloud_publisher_.publish(ground_cloud);
     start_cloud_publisher_.publish(start_cloud);
     end_cloud_publisher_.publish(end_cloud);
     point_cloud_publisher_.publish(publish_cloud);
@@ -431,6 +442,61 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
     //printf("%lu\n", p.points.size());
 
     gameMap();
+   if(_make_path_check){
+   	_make_path_check = false;
+  //sendto make path service here
+  tower_defense::MakePathSrv srv;
+  
+  //resize
+  srv.request.start = ConvertVectorToPoint(START);
+  srv.request.end = ConvertVectorToPoint(GOAL);
+  srv.request.point_cloud.resize(p.points.size());
+  float x_max = 0;
+  float x_min = 1000;
+  float y_max = 0;
+  float y_min = 1000;
+  float temp;
+  //convert to srv type HurtCreeperSrv
+  for(size_t i = 0; i < p.points.size(); i++){
+   srv.request.point_cloud[i] = ConvertVectorToPoint(p.points[i]);
+   if(isnan(p.points[i].x()) == 0 && isnan(p.points[i].y()) == 0){
+	   temp = p.points[i].x();
+	   if(temp < x_min){
+	   	x_min = temp;
+	   }
+	   if(temp > x_max){
+	   	x_max = temp;
+	   }
+	   temp = p.points[i].y();
+	   if(temp < y_min){
+	   	y_min = temp;
+	   }
+	   if(temp > y_max){
+	   	y_max = temp;
+	   }
+	}
+  }
+  printf("borders: xMin %f xMax %f yMin %f yMax %f",x_min, x_max, y_min, y_max);
+  if (get_path_caller.call(srv))
+  {
+   //not sure if you want the result from the service somewhere else
+   //the service returns creeper locations
+   //if you want the result somewhere else either make it a global or 
+   //just have towerai method return sendtoHurtCreeperService
+  	sensor_msgs::PointCloud make_path;
+    make_path.header.frame_id = "camera_rgb_optical_frame";
+  	make_path.points.resize(srv.response.path.size());
+  	for(size_t i = 0; i < srv.response.path.size(); i++){
+  		make_path.points[i] = srv.response.path[i];
+  		make_path.points[i].z = MODEZ;
+  	}
+  	make_path_publisher.publish(make_path);
+  }
+  else
+  {
+   ROS_ERROR("Failed to call service make path service");
+  } 
+}
     printf("//////////////\n" );
 
 }
@@ -618,37 +684,7 @@ void gameMap(){
   //Pass the tower cloud and the minimum number of points to make up a tower
   towerFind(towercloud, 100, .05);
   printf("Towers %lu\n", TOWERS.size());
-  //sendto make path service here
-  tower_defense::MakePathSrv srv;
-  
-  //resize
-  srv.request.start = ConvertVectorToPoint(START);
-  srv.request.end = ConvertVectorToPoint(GOAL);
-  srv.request.point_cloud.resize(p.points.size());
 
-  //convert to srv type HurtCreeperSrv
-  for(size_t i = 0; i < p.points.size(); i++){
-   srv.request.point_cloud[i] = ConvertVectorToPoint(p.points[i]);
-  }
-  
-  if (get_path_caller.call(srv))
-  {
-   //not sure if you want the result from the service somewhere else
-   //the service returns creeper locations
-   //if you want the result somewhere else either make it a global or 
-   //just have towerai method return sendtoHurtCreeperService
-  	sensor_msgs::PointCloud make_path;
-    make_path.header.frame_id = "camera_rgb_optical_frame";
-  	make_path.points.resize(srv.response.path.size());
-  	for(size_t i = 0; i < srv.response.path.size(); i++){
-  		make_path.points[i] = srv.response.path[i];
-  	}
-  	make_path_publisher.publish(make_path);
-  }
-  else
-  {
-   ROS_ERROR("Failed to call service make path service");
-  } 
 }
 
 //////////////////////////////////////////////////

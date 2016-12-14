@@ -88,11 +88,11 @@ def CheckExtension(point_cloud, r, current, desired):
 	for point in point_cloud:
 		P = np.array([point.x, point.y])
 		# n = np.array([-P[1], P[0]])
-
+		#print str(point.x) + " " + str(point.y)
 		# projection = (A + ((P-A).dot(V_hat)) * V_hat) - P
 		projection = (P.dot(V)/V_d)*V
 		# distance = P.dot(V_hat)
-
+		#print "projection " + str(np.sqrt(projection.dot(projection))) + " r " + str(r)
 		if (np.sqrt(projection.dot(projection)) <= r):
 		# if (abs(distance) <= r):
 			print "(" + str(current.x) + ", " + str(current.y) + ") to (" + str(desired.x) + ", " + str(desired.y) + ") collided with (" + str(point.x) + ", " + str(point.y) + ")"
