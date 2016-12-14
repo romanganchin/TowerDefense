@@ -37,21 +37,27 @@ class RRTNode():
 	location = Point32()
 	parent   = -1
 
-def RandomConfig(goal):
+def RandomConfig(goal, raw_points):
 	# global min_value
 	# global max_value
 	global x_min
 	global x_max
 	global y_min
 	global y_max
+	delta_q = 0.06
+	point   = np.random.choice(raw_points)
+	point   = np.array([point.x, point.y])
+	# goal    = np.array([goal.x, goal.y])
 
 	q_rand = Point32()
 	if RandomValue(0, 1) <= 0.05:
 		q_rand.x = goal.x
 		q_rand.y = goal.y
 	else:
-		q_rand.x = np.random.uniform(x_min, x_max)
-		q_rand.y = np.random.uniform(y_min, y_max)
+		q_rand.x = point[0]
+		q_rand.y = point[1]
+		# q_rand.x = np.random.uniform(x_min, x_max)
+		# q_rand.y = np.random.uniform(y_min, y_max)
 	return q_rand
 
 def ExtendNode(P, q):
@@ -78,28 +84,34 @@ def ExtendNode(P, q):
 
 	return q_near_index, q_new
 
+
+# def CheckExtension(point_cloud, r, current, desired):
+# 	V     = np.array([desired.x - current.x, desired.y - current.y])
+# 	V_d   = V.dot(V)
+# 	# V_hat = V / V.dot(V)
+# 	# V_hat = [-V[1], V[0]]
+# 	A     = np.array([current.x, current.y])
+# 
+# 	for point in point_cloud:
+# 		P = np.array([point.x, point.y])
+# 		# n = np.array([-P[1], P[0]])
+# 		#print str(point.x) + " " + str(point.y)
+# 		# projection = (A + ((P-A).dot(V_hat)) * V_hat) - P
+# 		projection = (P.dot(V)/V_d)*V
+# 		p_vector   = (P - projection) - np.array([current.x, current.y])
+# 		# distance = P.dot(V_hat)
+# 		#print "projection " + str(np.sqrt(projection.dot(projection))) + " r " + str(r)
+# 		if (np.sqrt(p_vector.dot(p_vector)) <= np.sqrt(V_d)) and (np.sqrt(projection.dot(projection)) <= r):
+# 		# if (abs(distance) <= r):
+# 			print "(" + str(current.x) + ", " + str(current.y) + ") to (" + str(desired.x) + ", " + str(desired.y) + ") collided with (" + str(point.x) + ", " + str(point.y) + ")"
+# 			return False
+# 
+#	 return True
+
 def CheckExtension(point_cloud, r, current, desired):
-	V     = np.array([desired.x - current.x, desired.y - current.y])
-	V_d   = V.dot(V)
-	# V_hat = V / V.dot(V)
-	# V_hat = [-V[1], V[0]]
-	A     = np.array([current.x, current.y])
-
-	for point in point_cloud:
-		P = np.array([point.x, point.y])
-		# n = np.array([-P[1], P[0]])
-		#print str(point.x) + " " + str(point.y)
-		# projection = (A + ((P-A).dot(V_hat)) * V_hat) - P
-		projection = (P.dot(V)/V_d)*V
-		p_vector   = (P - projection) - np.array([current.x, current.y])
-		# distance = P.dot(V_hat)
-		#print "projection " + str(np.sqrt(projection.dot(projection))) + " r " + str(r)
-		if (np.sqrt(p_vector.dot(p_vector)) <= np.sqrt(V_d)) and (np.sqrt(projection.dot(projection)) <= r):
-		# if (abs(distance) <= r):
-			print "(" + str(current.x) + ", " + str(current.y) + ") to (" + str(desired.x) + ", " + str(desired.y) + ") collided with (" + str(point.x) + ", " + str(point.y) + ")"
-			return False
-
-	return True
+	delta_q = 0.06
+	V = np.array([desired.x - current.x, desired.y - current.y])
+	return np.sqrt(V.dot(V)) <= 0.06
 
 #returns a list of points, which are the steps the creepers take at each timestep
 #the path coords should only be used by this node, but might be useful for something
@@ -133,7 +145,7 @@ def MakePathService(req):
 		while not CheckExtension(p, creeper_radius, q_near, q_new):
 			# print "finding some new points..."
 			# print q_new
-			q_rand      = RandomConfig(goal)
+			q_rand      = RandomConfig(goal, raw_points)
 			q_i, q_new  = ExtendNode(raw_points, q_rand)
 			q_near      = raw_points[q_i]
 
