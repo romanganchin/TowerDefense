@@ -70,6 +70,7 @@ ros::Publisher point_cloud_publisher_;
 ros::Publisher start_cloud_publisher_;
 ros::Publisher end_cloud_publisher_;
 ros::Publisher make_path_publisher;
+ros::Publisher my_path_publisher_;
 //Service callers
 ros::ServiceClient hurt_creeper;
 ros::ServiceClient move_creeper;
@@ -122,7 +123,15 @@ struct SUPERPOINTCLOUD
   vector<Vector3f> points;
   vector<Vector3f> colors;
 };
-
+ 
+struct TreeNode{
+    Vector3f location;
+    int parent;
+    TreeNode(Vector3f l, int p){
+        location = l;
+        parent = p;
+    }
+};
 //The game map which will store information on the entire
 //game state
 
@@ -191,7 +200,7 @@ float RandomValue(const float min, const float max) {
 }
 
 // Helper function to convert a 2D vector into a ros 3D point.
-Point VectorToPoint(const Vector2f& v) {
+Point VectorToPoint(const Vector3f& v) {
   Point point;
   point.x = v.x();
   point.y = v.y();
@@ -200,13 +209,13 @@ Point VectorToPoint(const Vector2f& v) {
 }
 
 // Helper function to visualize a point.
-void DrawPoint(const Vector2f& p, Marker* marker) {
+void DrawPoint(const Vector3f& p, Marker* marker) {
   marker->points.push_back(VectorToPoint(p));
 }
 
 // Helper function to visualize an edge.
-void DrawLine(const Vector2f& p1,
-              const Vector2f& p2,
+void DrawLine(const Vector3f& p1,
+              const Vector3f& p2,
               Marker* marker) {
   marker->points.push_back(VectorToPoint(p1));
   marker->points.push_back(VectorToPoint(p2));
@@ -302,6 +311,66 @@ creep getClosestCreep(tower currentTower, vector<creep> creeps){
     }
   }
   return c;
+}
+vector<Vector3f> GetPointsToConsider(Vector3f current, vector<Vector3f> possibleLocations){
+	vector<Vector3f> pointsToConsider;
+	float distance = .1;
+	for(size_t i = 0; i<possibleLocations.size(); i++){
+		if(distanceBetweenTwoPoints(current, possibleLocations[i])<=distance){
+			pointsToConsider.push_back(possibleLocations[i]);
+		}
+	}
+	printf("got to the points to consider\n");
+    sensor_msgs::PointCloud my_path_cloud;
+    my_path_cloud.header.frame_id = "camera_rgb_optical_frame";
+    my_path_cloud.points.resize(pointsToConsider.size());
+    for(size_t i = 0; i < pointsToConsider.size(); i++){
+   		my_path_cloud.points[i] = ConvertVectorToPoint(pointsToConsider[i]);
+    }
+    my_path_publisher_.publish(my_path_cloud);
+	return pointsToConsider;
+}
+Vector3f GetPointClosestToGoal(vector<Vector3f> pointsToConsider){
+  float closestDistance = distanceBetweenTwoPoints(GOAL, pointsToConsider[0]);
+  float currentDistance = closestDistance;
+  Vector3f c = START;
+  printf("points to consider Size%lu \n", pointsToConsider.size());
+  for(size_t i = 0; i < pointsToConsider.size(); i++){
+    currentDistance = distanceBetweenTwoPoints(GOAL, pointsToConsider[i]);
+    if(currentDistance < closestDistance){
+      closestDistance = currentDistance;
+      c = pointsToConsider[i];
+    }
+  }
+  printf("c.x %f, c.y %f c.z %f\n", c.x(), c.y(), c.z());
+  return c;
+}
+vector<TreeNode> MakePath(vector<Vector3f> possibleLocations){
+	printf("making path \n");
+	vector<TreeNode> pointsOnPath;
+	Vector3f current = START;
+	TreeNode temp(current, -1);
+	pointsOnPath.push_back(temp);
+	vector<Vector3f> pointsToConsider;
+	int parentIndex = 0;
+	while(current != GOAL){
+		pointsToConsider = GetPointsToConsider(current, possibleLocations);
+		current = GetPointClosestToGoal(pointsToConsider);
+		temp.location = current;
+		temp.parent = parentIndex;
+		parentIndex++;
+		pointsOnPath.push_back(temp);     
+        //DrawLine(temp.location, pointsOnPath[temp.parent].location, &plan_marker_);
+	}
+	printf("got to the publisher\n");
+    sensor_msgs::PointCloud my_path_cloud;
+    my_path_cloud.header.frame_id = "camera_rgb_optical_frame";
+    my_path_cloud.points.resize(pointsOnPath.size());
+    for(size_t i = 0; i < pointsOnPath.size(); i++){
+   		my_path_cloud.points[i] = ConvertVectorToPoint(pointsOnPath[i].location);
+    }
+    my_path_publisher_.publish(my_path_cloud);
+	return pointsOnPath;
 }
 vector<creep> TowerAI(vector<tower> towers, vector<creep> creeps){
   //variable for message to send to HurtCreepService
@@ -412,24 +481,44 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
     sensor_msgs::PointCloud ground_cloud;
     ground_cloud.header.frame_id = "camera_rgb_optical_frame";
     ground_cloud.points.resize(p.points.size());
+
+    //sendto make path service here
+  	tower_defense::MakePathSrv srv;
+  	
+
+  	vector<Vector3f> possibleLocations;
+  	vector<Vector3f> pointsSendingForRequest;
     for(size_t i = 0; i < p.points.size(); i++){
       //if(p.points[i].z() <= 1.036 || p.points[i].z() >=1.016)
       //z value for recorded bag files 1.026
       //found z value - .01
-      if(isnan(p.points[i].x()) == 0 && isnan(p.points[i].y()) == 0 && isnan(p.points[i].z()) == 0){
-	      if(p.points[i].z() > MODEZ-.05 && p.points[i].z() < MODEZ+.05){
-	      	ground_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
-	      }
-	      if(p.points[i].z() <=MODEZ-.05)
-	          publish_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
-	        if(p.colors[i].x() < 100 && p.colors[i].y() < 100 && p.colors[i].z() > 180){
-	          start_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
-	        }
-	        if(p.colors[i].x() > 180 && p.colors[i].y() < 100 && p.colors[i].z() < 100){
-	          end_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
-	        }
-	    }
+		if(isnan(p.points[i].x()) == 0 && isnan(p.points[i].y()) == 0 && isnan(p.points[i].z()) == 0){
+			if(p.points[i].z() > MODEZ-.05 && p.points[i].z() < MODEZ+.05){
+				ground_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
+				possibleLocations.push_back(p.points[i]);
+			//srv.request.point_cloud[i] = ConvertVectorToPoint(p.points[i]);
+			}
+			if(p.points[i].z() <=MODEZ-.05){
+				publish_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
+				pointsSendingForRequest.push_back(p.points[i]);
+				//srv.request.point_cloud[i] = ConvertVectorToPoint(p.points[i]);
+			}
+			if(p.colors[i].x() < 100 && p.colors[i].y() < 100 && p.colors[i].z() > 180){
+			start_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
+			}
+			if(p.colors[i].x() > 180 && p.colors[i].y() < 100 && p.colors[i].z() < 100){
+			end_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
+			}
+		}
     }
+    srv.request.point_cloud.resize(pointsSendingForRequest.size());
+    for(size_t i = 0; i< pointsSendingForRequest.size();i++){
+    	srv.request.point_cloud[i] = ConvertVectorToPoint(pointsSendingForRequest[i]);
+    }
+    gameMap();
+    //MakePath(possibleLocations);
+    ground_cloud.points[p.points.size()-2] = (ConvertVectorToPoint(START));
+    ground_cloud.points[p.points.size()-1] = (ConvertVectorToPoint(GOAL));
     filtered_point_cloud_publisher_.publish(ground_cloud);
     start_cloud_publisher_.publish(start_cloud);
     end_cloud_publisher_.publish(end_cloud);
@@ -441,16 +530,14 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
     //printf("%lu\n", p.colors.size());
     //printf("%lu\n", p.points.size());
 
-    gameMap();
+    
    if(_make_path_check){
    	_make_path_check = false;
-  //sendto make path service here
-  tower_defense::MakePathSrv srv;
-  
+
   //resize
   srv.request.start = ConvertVectorToPoint(START);
   srv.request.end = ConvertVectorToPoint(GOAL);
-  srv.request.point_cloud.resize(p.points.size());
+  //srv.request.point_cloud = ground_cloud;
   float x_max = 0;
   float x_min = 1000;
   float y_max = 0;
@@ -458,7 +545,7 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
   float temp;
   //convert to srv type HurtCreeperSrv
   for(size_t i = 0; i < p.points.size(); i++){
-   srv.request.point_cloud[i] = ConvertVectorToPoint(p.points[i]);
+   //srv.request.point_cloud[i] = ConvertVectorToPoint(p.points[i]);
    if(isnan(p.points[i].x()) == 0 && isnan(p.points[i].y()) == 0){
 	   temp = p.points[i].x();
 	   if(temp < x_min){
@@ -476,7 +563,7 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
 	   }
 	}
   }
-  printf("borders: xMin %f xMax %f yMin %f yMax %f",x_min, x_max, y_min, y_max);
+  printf("borders: xMin %f xMax %f yMin %f yMax %f\n",x_min, x_max, y_min, y_max);
   if (get_path_caller.call(srv))
   {
    //not sure if you want the result from the service somewhere else
@@ -489,6 +576,7 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
   	for(size_t i = 0; i < srv.response.path.size(); i++){
   		make_path.points[i] = srv.response.path[i];
   		make_path.points[i].z = MODEZ;
+  		printf("x %f y %f z %f\n",make_path.points[i].x, make_path.points[i].y, make_path.points[i].z);
   	}
   	make_path_publisher.publish(make_path);
   }
@@ -860,6 +948,9 @@ end_cloud_publisher_ =
 
 make_path_publisher =
   	n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/MakePath", 1);
+
+  my_path_publisher_ = 
+  	n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/MyPath", 1);
   //this works!
   ros::Subscriber depth_image_subscriber =
     n.subscribe<pcl::PointCloud<pcl::PointXYZRGB> >("/camera/depth_registered/points", 1, KinectCallback);
