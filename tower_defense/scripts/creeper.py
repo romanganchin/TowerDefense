@@ -91,6 +91,8 @@ def ExtendNode(P, q):
 
 
 def CheckExtension(point_cloud, r, current, desired):
+	print current.x
+	print current.y
 	V     = np.array([desired.x - current.x, desired.y - current.y])
 	V_hat = V / V.dot(V)
 	V_n   = np.array([-1 * V_hat[1], V_hat[0]])
@@ -194,7 +196,7 @@ def MakePathService(req):
 
 
 	print "here are the points"
-	for p in raw_path:
+	for p in raw_pointspath:
 		print p
 
 	return MakePathSrvResponse(raw_path)
