@@ -44,9 +44,9 @@ def RandomConfig(goal, raw_points):
 	global x_max
 	global y_min
 	global y_max
-	delta_q = 0.001
-	point   = np.random.choice(raw_points)
-	point   = np.array([point.x, point.y])
+	# delta_q = 0.001
+	# point   = np.random.choice(raw_points)
+	# point   = np.array([point.x, point.y])
 	# goal    = np.array([goal.x, goal.y])
 
 	q_rand = Point32()
@@ -54,14 +54,14 @@ def RandomConfig(goal, raw_points):
 		q_rand.x = goal.x
 		q_rand.y = goal.y
 	else:
-		q_rand.x = point[0]
-		q_rand.y = point[1]
-		# q_rand.x = np.random.uniform(x_min, x_max)
-		# q_rand.y = np.random.uniform(y_min, y_max)
+		# q_rand.x = point[0]
+		# q_rand.y = point[1]
+		q_rand.x = np.random.uniform(x_min, x_max)
+		q_rand.y = np.random.uniform(y_min, y_max)
 	return q_rand
 
 def ExtendNode(P, q):
-	delta_q = 0.001
+	delta_q = 0.06
 
 	q_new   = Point32()
 	goal    = np.array([q.x, q.y])
@@ -79,39 +79,40 @@ def ExtendNode(P, q):
 	else:
 		new_goal = goal
 
-	# q_new.x  = new_goal[0]
-	# q_new.y  = new_goal[1]
+	q_new.x  = new_goal[0]
+	q_new.y  = new_goal[1]
 
-	new_lengths = [np.linalg.norm(point-goal) for point in points]
-	new_index   = np.argmin(new_lengths)
-	q_new.x     = points[new_index][0]
-	q_new.y     = points[new_index][1]	
+	# new_lengths = [np.linalg.norm(point-goal) for point in points]
+	# new_index   = np.argmin(new_lengths)
+	# q_new.x     = points[new_index][0]
+	# q_new.y     = points[new_index][1]	
 
 	return q_near_index, q_new
 
 
-# def CheckExtension(point_cloud, r, current, desired):
-# 	V     = np.array([desired.x - current.x, desired.y - current.y])
-# 	V_d   = V.dot(V)
-# 	# V_hat = V / V.dot(V)
-# 	# V_hat = [-V[1], V[0]]
-# 	A     = np.array([current.x, current.y])
-# 
-# 	for point in point_cloud:
-# 		P = np.array([point.x, point.y])
-# 		# n = np.array([-P[1], P[0]])
-# 		#print str(point.x) + " " + str(point.y)
-# 		# projection = (A + ((P-A).dot(V_hat)) * V_hat) - P
-# 		projection = (P.dot(V)/V_d)*V
-# 		p_vector   = (P - projection) - np.array([current.x, current.y])
-# 		# distance = P.dot(V_hat)
-# 		#print "projection " + str(np.sqrt(projection.dot(projection))) + " r " + str(r)
-# 		if (np.sqrt(p_vector.dot(p_vector)) <= np.sqrt(V_d)) and (np.sqrt(projection.dot(projection)) <= r):
-# 		# if (abs(distance) <= r):
-# 			print "(" + str(current.x) + ", " + str(current.y) + ") to (" + str(desired.x) + ", " + str(desired.y) + ") collided with (" + str(point.x) + ", " + str(point.y) + ")"
-# 			return False
-# 
-#	 return True
+def CheckExtension(point_cloud, r, current, desired):
+	V     = np.array([desired.x - current.x, desired.y - current.y])
+	V_hat = V / V.dot(V)
+	V_d   = V_hat.dot(V_hat)
+	# V_hat = V / V.dot(V)
+	# V_hat = [-V[1], V[0]]
+	A     = np.array([current.x, current.y])
+
+	for point in point_cloud:
+		P = np.array([point.x, point.y])
+		# n = np.array([-P[1], P[0]])
+		#print str(point.x) + " " + str(point.y)
+		# projection = (A + ((P-A).dot(V_hat)) * V_hat) - P
+		projection = (P.dot(V_hat)/V_d)*V_hat
+		p_vector   = (P - projection) - np.array([current.x, current.y])
+		# distance = P.dot(V_hat)
+		#print "projection " + str(np.sqrt(projection.dot(projection))) + " r " + str(r)
+		if (np.sqrt(projection.dot(projection)) <= r):
+		# if (abs(distance) <= r):
+			print "(" + str(current.x) + ", " + str(current.y) + ") to (" + str(desired.x) + ", " + str(desired.y) + ") collided with (" + str(point.x) + ", " + str(point.y) + ")"
+			return False
+
+	 return True
 
 def CheckExtension(point_cloud, r, current, desired):
 	delta_q = 0.001
