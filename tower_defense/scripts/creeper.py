@@ -44,7 +44,7 @@ def RandomConfig(goal, raw_points):
 	global x_max
 	global y_min
 	global y_max
-	delta_q = 0.06
+	delta_q = 0.001
 	point   = np.random.choice(raw_points)
 	point   = np.array([point.x, point.y])
 	# goal    = np.array([goal.x, goal.y])
@@ -61,7 +61,7 @@ def RandomConfig(goal, raw_points):
 	return q_rand
 
 def ExtendNode(P, q):
-	delta_q = 0.06
+	delta_q = 0.001
 
 	q_new   = Point32()
 	goal    = np.array([q.x, q.y])
@@ -112,10 +112,9 @@ def ExtendNode(P, q):
 #	 return True
 
 def CheckExtension(point_cloud, r, current, desired):
-	# delta_q = 0.06
-	# V = np.array([desired.x - current.x, desired.y - current.y])
-	# return np.sqrt(V.dot(V)) > 0.06
-	return True
+	delta_q = 0.001
+	V = np.array([desired.x - current.x, desired.y - current.y])
+	return np.sqrt(V.dot(V)) > 0.001
 
 #returns a list of points, which are the steps the creepers take at each timestep
 #the path coords should only be used by this node, but might be useful for something
