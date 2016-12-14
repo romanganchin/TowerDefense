@@ -125,14 +125,6 @@ struct SUPERPOINTCLOUD
   vector<Vector3f> colors;
 };
  
-struct TreeNode{
-    Vector3f location;
-    int parent;
-    TreeNode(Vector3f l, int p){
-        location = l;
-        parent = p;
-    }
-};
 //The game map which will store information on the entire
 //game state
 
@@ -174,7 +166,7 @@ tower makeTower(Vector3f l, vector<Vector3f> po, int d, float r){
 vector<tower> TOWERS;
 Vector3f START(0,0,0);
 Vector3f GOAL(0,0,0); 
-
+vector<Vector3f> PATH;
 
 ///////////////////////////////////////////////////
 //              Helper Functions                 //
@@ -316,18 +308,17 @@ creep getClosestCreep(tower currentTower, vector<creep> creeps){
 /*
 * This is working gets all the points within a certain radius
 */
-vector<Vector3f> GetPointsToConsider(TreeNode current, vector<Vector3f> possibleLocations){
+vector<Vector3f> GetPointsToConsider(Vector3f current, vector<Vector3f> possibleLocations,float distance){
 	vector<Vector3f> pointsToConsider;
-	float distance = .025;
 	for(size_t i = 0; i<possibleLocations.size(); i++){
-		if(distanceBetweenTwoPoints(current.location, possibleLocations[i])<=distance){
+		if(distanceBetweenTwoPoints(current, possibleLocations[i])<=distance){
 			pointsToConsider.push_back(possibleLocations[i]);
 		}
 	}
 	//printf("got to the points to consider\n");
 	return pointsToConsider;
 }
-TreeNode GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoal){
+Vector3f GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoal){
 	//print points to Consider should be radius + already seen points
 	sensor_msgs::PointCloud my_points_cloud;
     my_points_cloud.header.frame_id = "camera_rgb_optical_frame";
@@ -339,7 +330,7 @@ TreeNode GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoa
 
       float random = RandomValue(0,1);
       Vector3f g;
-	  if(random < .6){
+	  if(random < .5){
 	  	g = myGoal;
 	  }
 	  else{
@@ -349,7 +340,7 @@ TreeNode GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoa
 	  }
 	  float closestDistance = distanceBetweenTwoPoints(g, pointsToConsider[0]);
 	  float currentDistance = closestDistance;
-	  TreeNode c(Vector3f(0,0,MODEZ),-1);
+	  Vector3f c(0,0,MODEZ);
 	  //printf("points to consider Size%lu \n", pointsToConsider.size());
 	  for(size_t i = 0; i < pointsToConsider.size(); i++){
 	  	// if(pointsToConsider[i] == GOAL){
@@ -359,48 +350,66 @@ TreeNode GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoa
 
 	    if(currentDistance <= closestDistance){
 	      closestDistance = currentDistance;
-	      c.location = pointsToConsider[i];
-	      c.parent = i;
+	      c = pointsToConsider[i];
 	    }
 	  }
   	return c;
 }
 
-vector<TreeNode> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector3f g){
+vector<Vector3f> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector3f g){
 	MarkerArray markers;
     plan_marker_.points.clear();
 	printf("making path \n");
-	vector<TreeNode> pointsOnPath;
-
-	TreeNode current(s, -1);
-	TreeNode temp(s, -1);
-	printf("disance between goal and start %f \n", distanceBetweenTwoPoints(g, current.location));
-	pointsOnPath.push_back(temp);
+	vector<Vector3f> pointsOnPath;
+	Vector3f current = s;
+	printf("disance between goal and start %f \n", distanceBetweenTwoPoints(g, current));
+	pointsOnPath.push_back(current);
 	vector<Vector3f> pointsToConsider;
 	bool not_reached_goal = true;
 	int counter = 0;
+	// vector<Vector3f> radiusPoints;
+	// float radiusDistance = .01;
+	float distance = .025;
+	// pointsToConsider = GetPointsToConsider(current, possibleLocations, distance);
+	// printf("radius Size %lu \n", pointsToConsider.size());
+	// int radiusSize = 550;//pointsToConsider.size();
+	// int currentRadiusSize = 0;
 	while(not_reached_goal  && counter < 10000){
 		//get all points within a certain radius of the current location that are valid points
-		pointsToConsider = GetPointsToConsider(current, possibleLocations);
+		int radiusCounter = 0;
+		pointsToConsider = GetPointsToConsider(current, possibleLocations, distance);
 		for(size_t i = 0; i < pointsOnPath.size(); i++){
-			pointsToConsider.push_back(pointsOnPath[i].location);
+			pointsToConsider.push_back(pointsOnPath[i]);
 		}
-		//index = NearestVertex()
+		//currentRadiusSize = pointsToConsider.size();
 		current = GetPointClosestToGoal(pointsToConsider, g);
-		DrawLine(current.location, pointsToConsider[current.parent], &edges_marker_);
-		temp = current;
-		pointsOnPath.push_back(temp); 
-		if(.01 > distanceBetweenTwoPoints(g, current.location)){
+		/*
+		Uncomment for radius checking
+		*/
+		// while(fabs(radiusSize-currentRadiusSize)>50 && radiusCounter < 50){
+		// 	radiusPoints = GetPointsToConsider(current, possibleLocations, distance);
+			
+		// 	currentRadiusSize = radiusPoints.size();
+			
+		// 	current = GetPointClosestToGoal(pointsToConsider, g);
+		// 	radiusCounter++;
+		// // }
+		// printf("current radius Size %lu \n", currentRadiusSize);
+		// printf("original Radius Size %i \n", radiusSize);
+		//radiusPoints = GetPointsToConsider(current, )
+		//DrawLine(current.location, pointsToConsider[current.parent], &edges_marker_);
+		pointsOnPath.push_back(current); 
+		if(.01 > distanceBetweenTwoPoints(g, current)){
             not_reached_goal = false;
         }
         counter++;
 	}
-	printf("disance between goal and start %f \n", distanceBetweenTwoPoints(g, current.location));
+	printf("disance between goal and start %f \n", distanceBetweenTwoPoints(g, current));
 	printf("got to the publisher\n");
 	printf("got to the publisher\n");
 	for(size_t i = 0; i < pointsOnPath.size(); i++){
 		//DrawLine(pointsOnPath[i].location, pointsOnPath[i+1].location, &plan_marker_);
-		plan_marker_.points.push_back(VectorToPoint(pointsOnPath[i].location));
+		plan_marker_.points.push_back(VectorToPoint(pointsOnPath[i]));
 	}
 	markers.markers.push_back(plan_marker_);
 	markers_publisher_.publish(markers);
@@ -408,7 +417,7 @@ vector<TreeNode> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector
     my_path_cloud.header.frame_id = "camera_rgb_optical_frame";
     my_path_cloud.points.resize(pointsOnPath.size());
     for(size_t i = 0; i < pointsOnPath.size(); i++){
-   		my_path_cloud.points[i] = ConvertVectorToPoint(pointsOnPath[i].location);
+   		my_path_cloud.points[i] = ConvertVectorToPoint(pointsOnPath[i]);
     }
     my_path_publisher_.publish(my_path_cloud);
 	return pointsOnPath;
@@ -566,13 +575,12 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
 	    possibleLocations.push_back(GOAL);
 	    Vector3f s = START;
 	    Vector3f g = GOAL;
-	    vector<TreeNode> pathTree = MakePath(possibleLocations, s, g);
-	    vector<Vector3f> path;
-	    for(size_t i = 0; i < pathTree.size(); i++){
-	    	path.push_back(pathTree[i].location);
-	    }
-
-	    MakePath(path, g, s);
+	    vector<Vector3f> pathTree = MakePath(possibleLocations, s, g);
+	    // vector<Vector3f> path;
+	    // for(size_t i = 0; i < pathTree.size(); i++){
+	    // 	path.push_back(pathTree[i]);
+	    // }
+	    PATH = MakePath(pathTree, g, s);
 	}
     ground_cloud.points[p.points.size()-2] = (ConvertVectorToPoint(START));
     ground_cloud.points[p.points.size()-1] = (ConvertVectorToPoint(GOAL));
