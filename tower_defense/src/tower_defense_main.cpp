@@ -544,7 +544,7 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
       //found z value - .01
 		if(isnan(p.points[i].x()) == 0 && isnan(p.points[i].y()) == 0 && isnan(p.points[i].z()) == 0){
 			if(p.points[i].z() > MODEZ-.05 && p.points[i].z() < MODEZ+.05){
-				ground_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
+				//ground_cloud.points[i] = ConvertVectorToPoint(p.points[i]);
 				possibleLocations.push_back(p.points[i]);
 			//srv.request.point_cloud[i] = ConvertVectorToPoint(p.points[i]);
 			}
@@ -576,14 +576,14 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
 	    Vector3f s = START;
 	    Vector3f g = GOAL;
 	    vector<Vector3f> pathTree = MakePath(possibleLocations, s, g);
-	    // vector<Vector3f> path;
-	    // for(size_t i = 0; i < pathTree.size(); i++){
-	    // 	path.push_back(pathTree[i]);
-	    // }
 	    PATH = MakePath(pathTree, g, s);
 	}
-    ground_cloud.points[p.points.size()-2] = (ConvertVectorToPoint(START));
-    ground_cloud.points[p.points.size()-1] = (ConvertVectorToPoint(GOAL));
+	ground_cloud.points.resize(PATH.size());
+	for(size_t i = 0; i < PATH.size(); i++){
+		ground_cloud.points[i] = ConvertVectorToPoint(PATH[i]);
+	}
+    // ground_cloud.points[p.points.size()-2] = (ConvertVectorToPoint(START));
+    // ground_cloud.points[p.points.size()-1] = (ConvertVectorToPoint(GOAL));
     filtered_point_cloud_publisher_.publish(ground_cloud);
     start_cloud_publisher_.publish(start_cloud);
     end_cloud_publisher_.publish(end_cloud);
