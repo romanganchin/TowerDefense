@@ -8,7 +8,7 @@ How to use this node:
 3a) if you want to create creeps, call MoveCreeperService with create_new = True
 4) Repeat 2 and 3 every timestep in whatever order makes the most sense
 """
-
+from __future__ import division
 import numpy as np
 import random
 import rospy
@@ -94,19 +94,31 @@ def CheckExtension(point_cloud, r, current, desired):
 	print current.x
 	print current.y
 	V     = np.array([desired.x - current.x, desired.y - current.y])
+	V_len = np.sqrt(V.dot(V))
 	V_hat = V / V.dot(V)
-	V_n   = np.array([-1 * V_hat[1], V_hat[0]])
-	V_d   = V_hat.dot(V_hat)
+	# V_n   = np.array([-1 * V_hat[1], V_hat[0]])
+	# V_d   = V_hat.dot(V_hat)
+
 
 	for point in point_cloud:
-		P = np.array([point.x - current.x, point.y - current.y])
+		P   = np.array([point.x - current.x, point.y - current.y])
+		P_s = P * (1 / V_len)
+		t   = V_hat.dot(P_s)
+
+		if t < 0:
+			t = 0
+		if t > 1:
+			t = 1
+
+		near = V * t
+		dist = np.linalg.norm(P-near)
 
 		# projection = (P.dot(V_hat)/V_d)*V_hat
 		# p_vector   = (P - projection) - np.array([current.x, current.y])
-		projection   = abs(P.dot(V_hat))
+		# projection   = abs(P.dot(V_hat))
 
 		# if (np.sqrt(projection.dot(projection)) <= r):
-		if (projection <= r):
+		if (dist <= r):
 			print "(" + str(current.x) + ", " + str(current.y) + ") to (" + str(desired.x) + ", " + str(desired.y) + ") collided with (" + str(point.x) + ", " + str(point.y) + ")"
 			return False
 
