@@ -104,7 +104,7 @@ def CheckExtension(point_cloud, r, current, desired):
 		projection   = abs(P.dot(V_hat))
 
 		# if (np.sqrt(projection.dot(projection)) <= r):
-		if (projection <= r)
+		if (projection <= r):
 			print "(" + str(current.x) + ", " + str(current.y) + ") to (" + str(desired.x) + ", " + str(desired.y) + ") collided with (" + str(point.x) + ", " + str(point.y) + ")"
 			return False
 
