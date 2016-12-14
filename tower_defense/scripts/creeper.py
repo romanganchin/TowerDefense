@@ -44,18 +44,12 @@ def RandomConfig(goal, raw_points):
 	global x_max
 	global y_min
 	global y_max
-	# delta_q = 0.001
-	# point   = np.random.choice(raw_points)
-	# point   = np.array([point.x, point.y])
-	# goal    = np.array([goal.x, goal.y])
 
 	q_rand = Point32()
 	if RandomValue(0, 1) <= 0.05:
 		q_rand.x = goal.x
 		q_rand.y = goal.y
 	else:
-		# q_rand.x = point[0]
-		# q_rand.y = point[1]
 		q_rand.x = np.random.uniform(x_min, x_max)
 		q_rand.y = np.random.uniform(y_min, y_max)
 	return q_rand
@@ -80,12 +74,7 @@ def ExtendNode(P, q):
 		new_goal = goal
 
 	q_new.x  = new_goal[0]
-	q_new.y  = new_goal[1]
-
-	# new_lengths = [np.linalg.norm(point-goal) for point in points]
-	# new_index   = np.argmin(new_lengths)
-	# q_new.x     = points[new_index][0]
-	# q_new.y     = points[new_index][1]	
+	q_new.y  = new_goal[1]	
 
 	return q_near_index, q_new
 
@@ -98,14 +87,14 @@ def CheckExtension(point_cloud, r, current, desired):
 	# V_len = np.sqrt(V.dot(V))
 	V_len = V.dot(V)
 	assert not V_len == 0
-	V_hat = V / V.dot(V)
+	# V_hat = V / V.dot(V)
 	# V_n   = np.array([-1 * V_hat[1], V_hat[0]])
 	# V_d   = V_hat.dot(V_hat)
 
 
 	for point in point_cloud:
 		P   = np.array([point.x - current.x, point.y - current.y])
-		P_s = P * (1.0 / V_len)
+		# P_s = P * (1.0 / V_len)
 		# t   = V_hat.dot(P_s)
 		t   = P.dot(V) / V_len
 
