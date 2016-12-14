@@ -16,7 +16,7 @@ import roslib; roslib.load_manifest('tower_defense')
 from geometry_msgs.msg import *
 from tower_defense.srv import *
 
-creeper_radius = 0.1
+creeper_radius = 0.2
 path_step_size = 0.001
 creeper_health = 10
 creepers       = [] #each creeper should be [health, index of location in path]
