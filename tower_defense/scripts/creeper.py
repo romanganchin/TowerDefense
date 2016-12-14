@@ -94,7 +94,10 @@ def CheckExtension(point_cloud, r, current, desired):
 	print current.x
 	print current.y
 	V     = np.array([desired.x - current.x, desired.y - current.y])
-	V_len = np.sqrt(V.dot(V))
+	start = np.array([current.x, current.y])
+	# V_len = np.sqrt(V.dot(V))
+	V_len = V.dot(V)
+	assert not V_len == 0
 	V_hat = V / V.dot(V)
 	# V_n   = np.array([-1 * V_hat[1], V_hat[0]])
 	# V_d   = V_hat.dot(V_hat)
@@ -102,16 +105,19 @@ def CheckExtension(point_cloud, r, current, desired):
 
 	for point in point_cloud:
 		P   = np.array([point.x - current.x, point.y - current.y])
-		P_s = P * (1 / V_len)
-		t   = V_hat.dot(P_s)
+		P_s = P * (1.0 / V_len)
+		# t   = V_hat.dot(P_s)
+		t   = P.dot(V) / V_len
 
 		if t < 0:
 			t = 0
 		if t > 1:
 			t = 1
 
-		near = V * t
-		dist = np.linalg.norm(P-near)
+		# near = V * t
+		proj = start + t * V
+		# dist = np.linalg.norm(P-near)
+		dist = np.linalg.norm(proj)
 
 		# projection = (P.dot(V_hat)/V_d)*V_hat
 		# p_vector   = (P - projection) - np.array([current.x, current.y])
