@@ -135,6 +135,8 @@ def MakePathService(req):
 
 	p     = req.point_cloud
 	p     = [point for point in p if not point.x == 0 and not point.y == 0]
+	for point in p:
+		print p
 	print len(p)
 	start = req.start
 	goal  = req.end
