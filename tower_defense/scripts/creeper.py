@@ -116,6 +116,8 @@ def CheckExtension(point_cloud, r, current, desired):
 		if (dist <= r):
 			print "(" + str(current.x) + ", " + str(current.y) + ") to (" + str(desired.x) + ", " + str(desired.y) + ") collided with (" + str(point.x) + ", " + str(point.y) + ")"
 			return False
+		else:
+			print dist
 		# else:
 			# print "(" + str(current.x) + ", " + str(current.y) + ") to (" + str(desired.x) + ", " + str(desired.y) + ") was fine with (" + str(point.x) + ", " + str(point.y) + ")"
 
