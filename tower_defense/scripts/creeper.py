@@ -112,11 +112,6 @@ def CheckExtension(point_cloud, r, current, desired):
 
 	return True
 
-def CheckExtension(point_cloud, r, current, desired):
-	delta_q = 0.001
-	V = np.array([desired.x - current.x, desired.y - current.y])
-	return np.sqrt(V.dot(V)) > 0.001
-
 #returns a list of points, which are the steps the creepers take at each timestep
 #the path coords should only be used by this node, but might be useful for something
 #TODO: test this to make sure it actually works
