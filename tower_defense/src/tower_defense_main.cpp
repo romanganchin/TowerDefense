@@ -374,7 +374,7 @@ Vector3f GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoa
       float random = RandomValue(0,1);
       Vector3f g;
 
-    float chance = .5;
+    float chance = .7;
     if(goaltostart){
       chance = .95;
     }
@@ -895,7 +895,11 @@ void PlayGameCallBack(const std_msgs::Float32& total_creeps){
   size_t frame = 0;
   ros::Rate loop_rate(5);
 
-  while(MAKEPATH){
+  vector<Vector3f> bestPath;
+  size_t minpath = 500;
+
+  size_t counter = 20;
+  while(MAKEPATH && counter > 0){
     Vector3f s = START;
     Vector3f g = GOAL;
     vector<Vector3f> poss;
@@ -904,11 +908,17 @@ void PlayGameCallBack(const std_msgs::Float32& total_creeps){
     vector<Vector3f> pathTree = MakePath(poss, s, g, false);
     //pathTree.push_back(g);
     PATH = MakePath(pathTree, g, s, true);
-    if(PATH.size() < 100){
-     MAKEPATH = false;
+    if(PATH.size() < minpath){
+      bestPath = PATH;
+      minpath = PATH.size();
+      PATH = bestPath;
+      if(PATH.size() < 50){
+        MAKEPATH = false;
+    }
     }
   }
 
+  
   while(!lost && !won){
     
     //Spawn 1 creep for every frame_per_creep number of frames 
