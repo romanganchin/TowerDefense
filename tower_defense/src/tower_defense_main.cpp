@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <sstream>
+#include <vector>
 
 #include <eigen3/Eigen/Dense>
 #include <geometry_msgs/Point32.h>
@@ -95,6 +96,8 @@ Marker plan_marker_;
 //Holds the location of the plane (Z)
 float MODEZ = 0;
 
+bool MAKEPATH = true;
+
 //Goal height (maximum height of goal)
 float GOAL_H  = .1;
 
@@ -151,8 +154,8 @@ struct tower{
 };
 
 struct creep{
-  Vector3f location;
-  float damageTaken;
+  size_t location;
+  float health;
 };
 //Constructor method for tower
 tower makeTower(Vector3f l, vector<Vector3f> po, int d, float r){
@@ -164,11 +167,15 @@ tower makeTower(Vector3f l, vector<Vector3f> po, int d, float r){
   return thing;
 } 
 
+
+
 //For the maping of towers, start and goal:
 vector<tower> TOWERS;
 Vector3f START(0,0,0);
 Vector3f GOAL(0,0,0); 
 vector<Vector3f> PATH;
+vector<creep> HORDE;
+std::vector<Vector3f> POSSIBLE;
 
 ///////////////////////////////////////////////////
 //              Helper Functions                 //
@@ -279,6 +286,27 @@ void InitMarkers() {
 ///////////////////////////////////////////////////
 //                 Functions                     //
 ///////////////////////////////////////////////////
+//moveCreep returns true if a creep reaches the end
+bool moveCreep(bool make_new){
+  size_t pathsize = PATH.size();
+  size_t hordesize = HORDE.size();
+  bool gameOver = false;
+  if(make_new){
+    creep new_creep;
+    new_creep.location = pathsize -1;
+    new_creep.health = 10;
+    HORDE.push_back(new_creep);
+  }
+
+  for(size_t i = 0; i < hordesize; i++){
+    HORDE[i].location--;
+    if(HORDE[i].location <= 0){
+      gameOver = true; 
+    }
+  }
+  return gameOver;
+}
+
 void gameMap();
 float maxOccuringValue();
 /*
@@ -294,18 +322,31 @@ float distanceBetweenTwoPoints(Vector3f v1, Vector3f v2){
 /*
   Finds the distance of the creep that is closest to the tower
 */
-creep getClosestCreep(tower currentTower, vector<creep> creeps){
-  float closestDistance = distanceBetweenTwoPoints(currentTower.location, creeps[0].location);
+void hurtClosestCreep(tower currentTower){
+  vector<creep> creeps = HORDE;
+  float closestDistance = distanceBetweenTwoPoints(currentTower.location, PATH[creeps[0].location]);
   float currentDistance = closestDistance;
-  creep c = creeps[0];
+
+  size_t creep_in = 0;
   for(size_t i = 0; i < creeps.size(); i++){
-    currentDistance = distanceBetweenTwoPoints(currentTower.location, creeps[i].location);
+    currentDistance = distanceBetweenTwoPoints(currentTower.location, PATH[creeps[i].location]);
     if(currentDistance < closestDistance){
       closestDistance = currentDistance;
-      c = creeps[i];
+      creep_in = i;
     }
   }
-  return c;
+  if(closestDistance < currentTower.range){
+    HORDE[creep_in].health -= currentTower.damage;
+    if(HORDE[creep_in].health <= 0){
+      vector<creep> temp;
+      for(size_t i = 0; i < HORDE.size(); i++){
+        if(i != creep_in){
+          temp.push_back(HORDE[i]);
+        }
+      }
+      HORDE = temp;
+    }
+  }
 }
 /*
 * This is working gets all the points within a certain radius
@@ -320,7 +361,7 @@ vector<Vector3f> GetPointsToConsider(Vector3f current, vector<Vector3f> possible
 	//printf("got to the points to consider\n");
 	return pointsToConsider;
 }
-Vector3f GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoal){
+Vector3f GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoal, bool goaltostart){
 	//print points to Consider should be radius + already seen points
 	sensor_msgs::PointCloud my_points_cloud;
     my_points_cloud.header.frame_id = "camera_rgb_optical_frame";
@@ -332,7 +373,13 @@ Vector3f GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoa
 
       float random = RandomValue(0,1);
       Vector3f g;
-	  if(random < .5){
+
+    float chance = .5;
+    if(goaltostart){
+      chance = .95;
+    }
+
+	  if(random < chance){
 	  	g = myGoal;
 	  }
 	  else{
@@ -358,7 +405,7 @@ Vector3f GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoa
   	return c;
 }
 
-vector<Vector3f> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector3f g){
+vector<Vector3f> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector3f g, bool goaltostart){
 	MarkerArray markers;
     plan_marker_.points.clear();
 	printf("making path \n");
@@ -384,7 +431,7 @@ vector<Vector3f> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector
 			pointsToConsider.push_back(pointsOnPath[i]);
 		}
 		//currentRadiusSize = pointsToConsider.size();
-		current = GetPointClosestToGoal(pointsToConsider, g);
+		current = GetPointClosestToGoal(pointsToConsider, g, goaltostart);
 		/*
 		Uncomment for radius checking
 		*/
@@ -424,52 +471,23 @@ vector<Vector3f> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector
     my_path_publisher_.publish(my_path_cloud);
 	return pointsOnPath;
 }
-vector<creep> TowerAI(vector<creep> creeps){
-  //variable for message to send to HurtCreepService
-  //HurtCreepService takes 
-  //int32[] damage
-    //geometry_msgs/Point32[] location
+bool TowerAI(){
+    bool victory = false;
+
     vector<tower> towers = TOWERS;
-    vector<creep> sendToHurtCreeperService;
     creep tempCreep;
   for(size_t i = 0; i < towers.size(); i++){
-    tempCreep = getClosestCreep(towers[i], creeps);
-    tempCreep.damageTaken = towers[i].damage;
-    sendToHurtCreeperService.push_back(tempCreep);
+    hurtClosestCreep(towers[i]);
+    //tempCreep = getClosestCreep(towers[i]);
+    //tempCreep.damageTaken = towers[i].damage;
+    //sendToHurtCreeperService.push_back(tempCreep);
   }
-  
-  //sendtoHurtCreeperService here
-  tower_defense::HurtCreeperSrv srv;
-  
-  //resize
-  srv.request.damage.resize(sendToHurtCreeperService.size());
-  srv.request.location.resize(sendToHurtCreeperService.size());
-
-  //convert to srv type HurtCreeperSrv
-  for(size_t i = 0; i < sendToHurtCreeperService.size(); i++){
-   srv.request.damage[i] = (int)sendToHurtCreeperService[i].damageTaken;
-   srv.request.location[i] = ConvertVectorToPoint(sendToHurtCreeperService[i].location);
+  if(HORDE.size() <= 0){
+    victory = true;
   }
-   vector<creep> updatedCreeperLocations;
-  if (hurt_creeper.call(srv))
-  {
-   //not sure if you want the result from the service somewhere else
-   //the service returns creeper locations
-   //if you want the result somewhere else either make it a global or 
-   //just have towerai method return sendtoHurtCreeperService
-   creep c;
-   for(size_t i = 0;i < srv.response.creeper_locations.size();i++){
-    c.location = ConvertPointToVector(srv.response.creeper_locations[i]);
-    c.damageTaken = 0;
-    updatedCreeperLocations.push_back(c);
-   }
-  }
-  else
-  {
-   ROS_ERROR("Failed to call service hurt creeper");
-  }  
-  return updatedCreeperLocations;
+  return victory;
 }
+
 //Determines the mode of the z coordinates for the SUPERPOINTCLOUD
 float maxOccuringValue(){
   printf("finding max value\n");
@@ -570,16 +588,17 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
     }
 
     if(_make_path_check){
-	   	_make_path_check = false;
+	   	//_make_path_check = false;
 	    gameMap();
 	    //end_cloud.points[0] = ConvertVectorToPoint(GOAL);
     	
 	    possibleLocations.push_back(START);
 	    possibleLocations.push_back(GOAL);
+      POSSIBLE = possibleLocations;
+
 	    Vector3f s = START;
 	    Vector3f g = GOAL;
-	    vector<Vector3f> pathTree = MakePath(possibleLocations, s, g);
-	    PATH = MakePath(pathTree, g, s);
+	   
       start_cloud_publisher_.publish(start_cloud);
     end_cloud_publisher_.publish(end_cloud);
 	}
@@ -634,6 +653,7 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
 	}
   }
   printf("borders: xMin %f xMax %f yMin %f yMax %f\n",x_min, x_max, y_min, y_max);
+  /*
   if (get_path_caller.call(srv))
   {
    //not sure if you want the result from the service somewhere else
@@ -656,7 +676,8 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
   } 
 }
     printf("//////////////\n" );
-
+    */
+  }
 }
 
 //Given: a pointcloud with the points which comprise all the 
@@ -673,10 +694,14 @@ void towerFind(SUPERPOINTCLOUD tcloud, size_t towercutoff, float radius){
   vector<tower> newTowers;
   TOWERS = newTowers;
   
-  //Only searches for 20 towers
-  size_t tower_limit = 30;
+  //Only searches for 10 towers
+  size_t tower_limit = 10;
   size_t limiter = 0;
 
+  if(TOWERS.size() > 20000){
+    printf("To many towers!\n");
+    return;
+  }
    
   //Tracks best tower information
   size_t mostPoints = 1;
@@ -856,55 +881,58 @@ void gameMap(){
 void PlayGameCallBack(const std_msgs::Float32& total_creeps){
   bool lost = false;
   bool won = false;
+
   size_t creeps_made = (size_t) total_creeps.data;
   size_t creeps_left = creeps_made;
-  tower_defense::MoveCreepersSrv moveCreeps; 
+  //tower_defense::MoveCreepersSrv moveCreeps; 
+
+  vector<creep> delet;
+  HORDE = delet;
+
+  bool makeNew = false;
+
   size_t frames_per_creep = 1; 
   size_t frame = 0;
+  ros::Rate loop_rate(5);
 
-  vector<creep> undeadArmy; 
-  vector<creep> undeadScourge;
+  while(MAKEPATH){
+    Vector3f s = START;
+    Vector3f g = GOAL;
+    vector<Vector3f> poss;
+    PATH = poss;
+    poss = POSSIBLE;
+    vector<Vector3f> pathTree = MakePath(poss, s, g, false);
+    //pathTree.push_back(g);
+    PATH = MakePath(pathTree, g, s, true);
+    if(PATH.size() < 100){
+     MAKEPATH = false;
+    }
+  }
 
   while(!lost && !won){
     
     //Spawn 1 creep for every frame_per_creep number of frames 
-    if(creeps_made != 0 && frame % frames_per_creep == 0){
-      moveCreeps.request.create_new.data = true;
+    if(creeps_made != 0){
+      makeNew = true;
       creeps_made--;
     }
     else{
       //If not spawning creeps, move the creeps
-      moveCreeps.request.create_new.data = false;
+     makeNew = false;
     }
     frame++;
 
     //Call Move Creep Service 
-    if(move_creeper.call(moveCreeps)){
-      //If reached end, you have lost son
-      lost = moveCreeps.response.reached_end.data;
-      creeps_left = moveCreeps.response.creeper_locations.size();
+    lost = moveCreep(makeNew);
+    if(lost){break;}
+
+    won = TowerAI();
       
-      //Convert Point32[] to vector<creep>
-      for(size_t i = 0; i < creeps_left; i++){
-        creep soldier;
-        soldier.location = ConvertPointToVector(moveCreeps.response.creeper_locations[i]);
-        soldier.damageTaken = 0;
-        undeadArmy.push_back(soldier);
-      }
-    
-    }
-    else{ROS_ERROR("Failed to call move_creeper");}
-
-    //Update our minions so the damage is approriate. Any warrior 
-    //who fell in battle is removed from the array. 
-    undeadScourge = TowerAI(undeadArmy);
-
-    //Check if any creeps remain. 
-    creeps_left = undeadScourge.size();
-    if(creeps_left == 0){
-      //If all the creeps are dead, the defenders can declare victory.
+    if(won && creeps_made <= 0){
       won = true;
     }
+    else(won = false);
+    printf("%lu\n", PATH.size());
 
     //Draw to rviz
     //drawScene(undeadScourge);
@@ -916,17 +944,22 @@ void PlayGameCallBack(const std_msgs::Float32& total_creeps){
     //ros::Publisher marker_pub = n.advertise<visualization_msg::Marker>("visualization_marker", 100)
 
     sensor_msgs::PointCloud riseMyMinions;
+    riseMyMinions.points.clear();
       riseMyMinions.header.frame_id = "camera_rgb_optical_frame";
-      riseMyMinions.points.resize(undeadScourge.size());
-      for(size_t i = 0; i < creeps_left; i++){
-        riseMyMinions.points[i] = ConvertVectorToPoint(undeadScourge[i].location);
+      riseMyMinions.points.resize(HORDE.size());
+      for(size_t i = 0; i < HORDE.size(); i++){
+        riseMyMinions.points[i] = ConvertVectorToPoint(PATH[HORDE[i].location]);
         riseMyMinions.points[i].z = MODEZ -.01;
       }
     creep_publisher_.publish(riseMyMinions);
 
-    
-    
+    for(size_t i = 0; i < HORDE.size(); i++){
+      printf("L %lu, H %f\n", HORDE[i].location, HORDE[i].health);
+    }
+
+    loop_rate.sleep();
   }
+
   if(lost){
     printf("DEFEAT: THE UNDEAD HORDE HAS LAID WASTE TO YOUR CITY\n AND ATE ALL YOUR CHEESES! (EVEN THE GOUDA!) \n");
   }
