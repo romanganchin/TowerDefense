@@ -1138,7 +1138,7 @@ int main(int argc, char **argv) {
   }
   //Seed Random number generator
   srand(time(NULL));
-
+  printf("Starting\n");
   ros::init(argc, argv, "camera_rgb_optical_frame");
   ros::NodeHandle n;
 
