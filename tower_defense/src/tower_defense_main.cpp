@@ -20,6 +20,7 @@
 #include <pcl_ros/transforms.h>
 #include <pcl_ros/point_cloud.h>
 #include <pcl/point_types.h>
+#include <std_msgs/Float32.h>
 
 /*
 #include <pcl/ModelCoefficients.h>
@@ -72,6 +73,7 @@ ros::Publisher end_cloud_publisher_;
 ros::Publisher make_path_publisher;
 ros::Publisher my_path_publisher_;
 ros::Publisher my_points_publisher_;
+ros::Publisher creep_publisher_;
 //Service callers
 ros::ServiceClient hurt_creeper;
 ros::ServiceClient move_creeper;
@@ -422,11 +424,12 @@ vector<Vector3f> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector
     my_path_publisher_.publish(my_path_cloud);
 	return pointsOnPath;
 }
-vector<creep> TowerAI(vector<tower> towers, vector<creep> creeps){
+vector<creep> TowerAI(vector<creep> creeps){
   //variable for message to send to HurtCreepService
   //HurtCreepService takes 
   //int32[] damage
     //geometry_msgs/Point32[] location
+    vector<tower> towers = TOWERS;
     vector<creep> sendToHurtCreeperService;
     creep tempCreep;
   for(size_t i = 0; i < towers.size(); i++){
@@ -736,6 +739,12 @@ void towerFind(SUPERPOINTCLOUD tcloud, size_t towercutoff, float radius){
               tempPoints++;
               //Flag as included
               Vector3f newF(1,0,0);
+              
+              //CHANGE TOWER STATS
+              temp_tower.damage = 5;
+              temp_tower.range = 1;
+              temp_tower.height = fabs(MODEZ - pMid.z());
+
               towercloud.colors[j] = newF;
             }
             //If the temp tower is the tower of bestfit for pmid 
@@ -762,84 +771,170 @@ void gameMap(){
     SUPERPOINTCLOUD startcloud;
     SUPERPOINTCLOUD goalcloud; 
 
-  //Filter points into three point clouds
-  //towercloiud for points that make up towers
-  //startcloud 
+    //Filter points into three point clouds
+    //towercloiud for points that make up towers
+    //startcloud 
 
-  for(size_t i = 0; i <= p.points.size(); i++){
-    Vector3f cur = p.points[i];
-    float height = MODEZ - cur.z();
-  
-    if(height > WALL_H && cur.z() < MODEZ){
-      towercloud.points.push_back(cur);
-      //We are going to use the color red as a flag in find tower
-      Vector3f color(0,0,0);
-      towercloud.colors.push_back(color);
-    }
-    if(height < GOAL_H && height > 0){
-      //RGB.x() = red, .y() = Green, .z() = blue
-      Vector3f rgb = p.colors[i];
-
-      //printf("%f %f %f\n", rgb.x(), rgb.y(), rgb.z());
-      //If blue, then it is a start
-      if(rgb.z() > 180 && 100 > rgb.x() && 100 > rgb.y()){
-       
-        startcloud.points.push_back(cur);
-        startcloud.colors.push_back(rgb);
-      }
-      //If red then is an end
-      if(rgb.x() > 180 && 100 > rgb.z() && 100 > rgb.y()){
-       
-        goalcloud.points.push_back(cur);
-        goalcloud.colors.push_back(rgb);
-      }
-    }
-  }
-  printf("Tower: %lu\n", towercloud.points.size());
-  printf("Start: %lu\n", startcloud.points.size());
-  printf("Goal: %lu\n", goalcloud.points.size());
-
-  //To find start and goal, find the average of all the points
-  //in their respective arrays
-
-  size_t startMag = startcloud.points.size();
-  Vector3f startPoint(0,0,0);
-  for(size_t i = 0; i < startMag; i++){
-    Vector3f cur = startcloud.points[i];
+    for(size_t i = 0; i <= p.points.size(); i++){
+      Vector3f cur = p.points[i];
+      float height = MODEZ - cur.z();
     
-    //printf("S %f, %f, %f \n", startPoint.x(), startPoint.y(), startPoint.z());
-    startPoint.x() += cur.x();
-    startPoint.y() += cur.y();
-    startPoint.z() += cur.z();
-  }
-  startPoint.x() = startPoint.x()/(float) startMag;
-  startPoint.y() = startPoint.y()/(float) startMag;
-  startPoint.z() = startPoint.z()/(float) startMag;
+      if(height > WALL_H && cur.z() < MODEZ){
+        towercloud.points.push_back(cur);
+        //We are going to use the color red as a flag in find tower
+        Vector3f color(0,0,0);
+        towercloud.colors.push_back(color);
+      }
+      if(height < GOAL_H && height > 0){
+        //RGB.x() = red, .y() = Green, .z() = blue
+        Vector3f rgb = p.colors[i];
+
+        //printf("%f %f %f\n", rgb.x(), rgb.y(), rgb.z());
+        //If blue, then it is a start
+        if(rgb.z() > 180 && 100 > rgb.x() && 100 > rgb.y()){
+         
+          startcloud.points.push_back(cur);
+          startcloud.colors.push_back(rgb);
+        }
+        //If red then is an end
+        if(rgb.x() > 180 && 100 > rgb.z() && 100 > rgb.y()){
+         
+          goalcloud.points.push_back(cur);
+          goalcloud.colors.push_back(rgb);
+        }
+      }
+    }
+    printf("Tower: %lu\n", towercloud.points.size());
+    printf("Start: %lu\n", startcloud.points.size());
+    printf("Goal: %lu\n", goalcloud.points.size());
+
+    //To find start and goal, find the average of all the points
+    //in their respective arrays
+
+    size_t startMag = startcloud.points.size();
+    Vector3f startPoint(0,0,0);
+    for(size_t i = 0; i < startMag; i++){
+      Vector3f cur = startcloud.points[i];
+      
+      //printf("S %f, %f, %f \n", startPoint.x(), startPoint.y(), startPoint.z());
+      startPoint.x() += cur.x();
+      startPoint.y() += cur.y();
+      startPoint.z() += cur.z();
+    }
+    startPoint.x() = startPoint.x()/(float) startMag;
+    startPoint.y() = startPoint.y()/(float) startMag;
+    startPoint.z() = startPoint.z()/(float) startMag;
 
 
-  size_t goalMag = goalcloud.points.size();
-  Vector3f goalPoint(0,0,0);
-  for(size_t i = 0; i < goalMag; i++){
-    Vector3f cur = goalcloud.points[i];
-    //printf("G %f, %f, %f \n", goalPoint.x(), goalPoint.y(), goalPoint.z());
-    goalPoint.x() += cur.x();
-    goalPoint.y() += cur.y();
-    goalPoint.z() += cur.z();
-  }
-  goalPoint.x() = goalPoint.x()/(float) goalMag;
-  goalPoint.y() = goalPoint.y()/(float) goalMag;
-  goalPoint.z() = goalPoint.z()/(float) goalMag;
+    size_t goalMag = goalcloud.points.size();
+    Vector3f goalPoint(0,0,0);
+    for(size_t i = 0; i < goalMag; i++){
+      Vector3f cur = goalcloud.points[i];
+      //printf("G %f, %f, %f \n", goalPoint.x(), goalPoint.y(), goalPoint.z());
+      goalPoint.x() += cur.x();
+      goalPoint.y() += cur.y();
+      goalPoint.z() += cur.z();
+    }
+    goalPoint.x() = goalPoint.x()/(float) goalMag;
+    goalPoint.y() = goalPoint.y()/(float) goalMag;
+    goalPoint.z() = goalPoint.z()/(float) goalMag;
 
-  printf("Start: %f,%f,%f\n", startPoint.x(), startPoint.y(), startPoint.z());
-  printf("Goal: %f,%f,%f\n", goalPoint.x(), goalPoint.y(), goalPoint.z());
-  START = goalPoint;
-  GOAL = startPoint;
+    printf("Start: %f,%f,%f\n", startPoint.x(), startPoint.y(), startPoint.z());
+    printf("Goal: %f,%f,%f\n", goalPoint.x(), goalPoint.y(), goalPoint.z());
+    START = goalPoint;
+    GOAL = startPoint;
 
-  //Pass the tower cloud and the minimum number of points to make up a tower
-  towerFind(towercloud, 100, .05);
-  printf("Towers %lu\n", TOWERS.size());
+    //Pass the tower cloud and the minimum number of points to make up a tower
+    towerFind(towercloud, 100, .05);
+    printf("Towers %lu\n", TOWERS.size());
 
 }
+
+
+
+void PlayGameCallBack(const std_msgs::Float32& total_creeps){
+  bool lost = false;
+  bool won = false;
+  size_t creeps_made = (size_t) total_creeps.data;
+  size_t creeps_left = creeps_made;
+  tower_defense::MoveCreepersSrv moveCreeps; 
+  size_t frames_per_creep = 1; 
+  size_t frame = 0;
+
+  vector<creep> undeadArmy; 
+  vector<creep> undeadScourge;
+
+  while(!lost && !won){
+    
+    //Spawn 1 creep for every frame_per_creep number of frames 
+    if(creeps_made != 0 && frame % frames_per_creep == 0){
+      moveCreeps.request.create_new.data = true;
+      creeps_made--;
+    }
+    else{
+      //If not spawning creeps, move the creeps
+      moveCreeps.request.create_new.data = false;
+    }
+    frame++;
+
+    //Call Move Creep Service 
+    if(move_creeper.call(moveCreeps)){
+      //If reached end, you have lost son
+      lost = moveCreeps.response.reached_end.data;
+      creeps_left = moveCreeps.response.creeper_locations.size();
+      
+      //Convert Point32[] to vector<creep>
+      for(size_t i = 0; i < creeps_left; i++){
+        creep soldier;
+        soldier.location = ConvertPointToVector(moveCreeps.response.creeper_locations[i]);
+        soldier.damageTaken = 0;
+        undeadArmy.push_back(soldier);
+      }
+    
+    }
+    else{ROS_ERROR("Failed to call move_creeper");}
+
+    //Update our minions so the damage is approriate. Any warrior 
+    //who fell in battle is removed from the array. 
+    undeadScourge = TowerAI(undeadArmy);
+
+    //Check if any creeps remain. 
+    creeps_left = undeadScourge.size();
+    if(creeps_left == 0){
+      //If all the creeps are dead, the defenders can declare victory.
+      won = true;
+    }
+
+    //Draw to rviz
+    //drawScene(undeadScourge);
+
+    //Convert UndeadScourge to a pointcloud
+    //TODO ADD 2 PUBLISHERS
+    //creep_publisher which publishes a pointcloud
+    //goal_publisher publishes marker
+    //ros::Publisher marker_pub = n.advertise<visualization_msg::Marker>("visualization_marker", 100)
+
+    sensor_msgs::PointCloud riseMyMinions;
+      riseMyMinions.header.frame_id = "camera_rgb_optical_frame";
+      riseMyMinions.points.resize(undeadScourge.size());
+      for(size_t i = 0; i < creeps_left; i++){
+        riseMyMinions.points[i] = ConvertVectorToPoint(undeadScourge[i].location);
+        riseMyMinions.points[i].z = MODEZ -.01;
+      }
+    creep_publisher_.publish(riseMyMinions);
+
+    
+    
+  }
+  if(lost){
+    printf("DEFEAT: THE UNDEAD HORDE HAS LAID WASTE TO YOUR CITY\n AND ATE ALL YOUR CHEESES! (EVEN THE GOUDA!) \n");
+  }
+  else{
+    printf("VICTORY: NOW TO FEED ON THE FLESH OF YOUR FALLEN FOES\n FRET NOT, WE HAVE CHEESE! (GOUDA FOR ALL!)\n");
+  }
+}
+
+
 
 //////////////////////////////////////////////////
 //                  Testing                     //
@@ -997,10 +1092,13 @@ int main(int argc, char **argv) {
     testingSuite();
     return 0;
   }
+  //Seed Random number generator
+  srand(time(NULL));
+  
   ros::init(argc, argv, "camera_rgb_optical_frame");
   ros::NodeHandle n;
 
-markers_publisher_ = n.advertise<visualization_msgs::MarkerArray>(
+   markers_publisher_ = n.advertise<visualization_msgs::MarkerArray>(
   "/COMPSCI403/RRT_Display", 10);
 
   filtered_point_cloud_publisher_ = 
@@ -1022,6 +1120,10 @@ make_path_publisher =
   	n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/MyPath", 1);
   	my_points_publisher_ =
   	n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/MyPoints", 1);
+
+
+  creep_publisher_ = n.advertise<sensor_msgs::PointCloud>("/COMPSCI403/Creep", 1);
+
   //this works!
   ros::Subscriber depth_image_subscriber =
     n.subscribe<pcl::PointCloud<pcl::PointXYZRGB> >("/camera/depth_registered/points", 1, KinectCallback);
@@ -1037,6 +1139,10 @@ make_path_publisher =
   // markers_publisher_ = n.advertise<visualization_msgs::MarkerArray>(
   //     "/COMPSCI403/RRT_Display", 10);
    // gameMap();
+
+  ros::Subscriber play_game_sub =
+   n.subscribe("/tower_defense/PlayGame", 1, PlayGameCallBack);
+
 
   ros::spin();
   return 0;
