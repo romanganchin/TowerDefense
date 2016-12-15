@@ -782,13 +782,13 @@ void gameMap(){
 
       //printf("%f %f %f\n", rgb.x(), rgb.y(), rgb.z());
       //If blue, then it is a start
-      if(rgb.z() > 120 && rgb.z() > rgb.x()*2 && rgb.z() > rgb.y()*2){
+      if(rgb.z() > 180 && 100 > rgb.x() && 100 > rgb.y()){
        
         startcloud.points.push_back(cur);
         startcloud.colors.push_back(rgb);
       }
       //If red then is an end
-      if(rgb.x() > 120 && rgb.x() > rgb.z()*1.5 && rgb.x() > rgb.y()*1.5){
+      if(rgb.x() > 180 && 100 > rgb.z() && 100 > rgb.y()){
        
         goalcloud.points.push_back(cur);
         goalcloud.colors.push_back(rgb);
