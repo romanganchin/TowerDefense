@@ -167,7 +167,10 @@ tower makeTower(Vector3f l, vector<Vector3f> po, int d, float r){
   return thing;
 } 
 
-
+struct edge{
+    Vector3f vertexA;
+    Vector3f vertexB;
+};
 
 //For the maping of towers, start and goal:
 vector<tower> TOWERS;
@@ -322,11 +325,15 @@ float distanceBetweenTwoPoints(Vector3f v1, Vector3f v2){
 /*
   Finds the distance of the creep that is closest to the tower
 */
-void hurtClosestCreep(tower currentTower){
+edge hurtClosestCreep(tower currentTower){
   vector<creep> creeps = HORDE;
   float closestDistance = distanceBetweenTwoPoints(currentTower.location, PATH[creeps[0].location]);
   float currentDistance = closestDistance;
-
+  
+  edge edge;
+  Vector3f temp(-9, -9, -9);
+  edge.vertexA = temp;
+  edge.vertexB = temp;
   size_t creep_in = 0;
   for(size_t i = 0; i < creeps.size(); i++){
     currentDistance = distanceBetweenTwoPoints(currentTower.location, PATH[creeps[i].location]);
@@ -337,6 +344,9 @@ void hurtClosestCreep(tower currentTower){
   }
   if(closestDistance < currentTower.range){
     HORDE[creep_in].health -= currentTower.damage;
+    edge.vertexA = currentTower.location;
+    edge.vertexB = PATH[HORDE[creep_in].location];
+
     if(HORDE[creep_in].health <= 0){
       vector<creep> temp;
       for(size_t i = 0; i < HORDE.size(); i++){
@@ -347,6 +357,7 @@ void hurtClosestCreep(tower currentTower){
       HORDE = temp;
     }
   }
+  return edge;
 }
 /*
 * This is working gets all the points within a certain radius
@@ -406,8 +417,7 @@ Vector3f GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoa
 }
 
 vector<Vector3f> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector3f g, bool goaltostart){
-	MarkerArray markers;
-    plan_marker_.points.clear();
+	
 	printf("making path \n");
 	vector<Vector3f> pointsOnPath;
 	Vector3f current = s;
@@ -456,12 +466,7 @@ vector<Vector3f> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector
 	printf("disance between goal and start %f \n", distanceBetweenTwoPoints(g, current));
 	printf("got to the publisher\n");
 	printf("got to the publisher\n");
-	for(size_t i = 0; i < pointsOnPath.size(); i++){
-		//DrawLine(pointsOnPath[i].location, pointsOnPath[i+1].location, &plan_marker_);
-		plan_marker_.points.push_back(VectorToPoint(pointsOnPath[i]));
-	}
-	markers.markers.push_back(plan_marker_);
-	markers_publisher_.publish(markers);
+		
     sensor_msgs::PointCloud my_path_cloud;
     my_path_cloud.header.frame_id = "camera_rgb_optical_frame";
     my_path_cloud.points.resize(pointsOnPath.size());
@@ -474,10 +479,18 @@ vector<Vector3f> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector
 bool TowerAI(){
     bool victory = false;
 
+    MarkerArray markers;
+     markers.markers.clear();
+     plan_marker_ = edges_marker_;
     vector<tower> towers = TOWERS;
     creep tempCreep;
-  for(size_t i = 0; i < towers.size(); i++){
-    hurtClosestCreep(towers[i]);
+    for(size_t i = 0; i < towers.size(); i++){
+      edge line = hurtClosestCreep(towers[i]);
+      //printf("%f, %f\n", line.vertexB.x(), line.vertexB.y());
+      if(line.vertexA.x() != -9){
+        DrawLine(line.vertexA, line.vertexB, &plan_marker_);
+        markers.markers.push_back(plan_marker_);
+      }
     //tempCreep = getClosestCreep(towers[i]);
     //tempCreep.damageTaken = towers[i].damage;
     //sendToHurtCreeperService.push_back(tempCreep);
@@ -485,6 +498,10 @@ bool TowerAI(){
   if(HORDE.size() <= 0){
     victory = true;
   }
+
+  
+    markers_publisher_.publish(markers);
+
   return victory;
 }
 
@@ -914,10 +931,19 @@ void PlayGameCallBack(const std_msgs::Float32& total_creeps){
       PATH = bestPath;
       if(PATH.size() < 50){
         MAKEPATH = false;
+        /*
+        tower trump_tower; 
+        Vector3f g(-.023,.3,1);
+        trump_tower.location = g;
+        trump_tower.damage = 1;
+        trump_tower.range = .2;
+        TOWERS.push_back(trump_tower); */
     }
     }
   }
 
+  
+  
   
   while(!lost && !won){
     
