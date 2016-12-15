@@ -327,36 +327,39 @@ float distanceBetweenTwoPoints(Vector3f v1, Vector3f v2){
 */
 edge hurtClosestCreep(tower currentTower){
   vector<creep> creeps = HORDE;
-  float closestDistance = distanceBetweenTwoPoints(currentTower.location, PATH[creeps[0].location]);
-  float currentDistance = closestDistance;
-  
   edge edge;
   Vector3f temp(-9, -9, -9);
-  edge.vertexA = temp;
-  edge.vertexB = temp;
-  size_t creep_in = 0;
-  for(size_t i = 0; i < creeps.size(); i++){
-    currentDistance = distanceBetweenTwoPoints(currentTower.location, PATH[creeps[i].location]);
-    if(currentDistance < closestDistance){
-      closestDistance = currentDistance;
-      creep_in = i;
-    }
-  }
-  if(closestDistance < currentTower.range){
-    HORDE[creep_in].health -= currentTower.damage;
-    edge.vertexA = currentTower.location;
-    edge.vertexB = PATH[HORDE[creep_in].location];
+  if(HORDE.size()>0){
+	  float closestDistance = distanceBetweenTwoPoints(currentTower.location, PATH[creeps[0].location]);
+	  float currentDistance = closestDistance;
 
-    if(HORDE[creep_in].health <= 0){
-      vector<creep> temp;
-      for(size_t i = 0; i < HORDE.size(); i++){
-        if(i != creep_in){
-          temp.push_back(HORDE[i]);
-        }
-      }
-      HORDE = temp;
-    }
-  }
+	  edge.vertexA = temp;
+	  edge.vertexB = temp;
+	  size_t creep_in = 0;
+	  for(size_t i = 0; i < creeps.size(); i++){
+	    currentDistance = distanceBetweenTwoPoints(currentTower.location, PATH[creeps[i].location]);
+	    if(currentDistance < closestDistance){
+	      closestDistance = currentDistance;
+	      creep_in = i;
+	    }
+	  }
+	  if(closestDistance < currentTower.range){
+	    HORDE[creep_in].health -= currentTower.damage;
+	    edge.vertexA = currentTower.location;
+	    edge.vertexB = PATH[HORDE[creep_in].location];
+
+	    if(HORDE[creep_in].health <= 0){
+	      // vector<creep> temp;
+	      // for(size_t i = 0; i < HORDE.size(); i++){
+	      //   if(i != creep_in){
+	      //     temp.push_back(HORDE[i]);
+	      //   }
+	      // }
+	      // HORDE = temp;
+	      HORDE.erase(HORDE.begin() + creep_in);
+	    }
+	  }
+	}
   return edge;
 }
 /*
@@ -931,13 +934,13 @@ void PlayGameCallBack(const std_msgs::Float32& total_creeps){
       PATH = bestPath;
       if(PATH.size() < 50){
         MAKEPATH = false;
-        /*
+        
         tower trump_tower; 
         Vector3f g(-.023,.3,1);
         trump_tower.location = g;
         trump_tower.damage = 1;
         trump_tower.range = .2;
-        TOWERS.push_back(trump_tower); */
+        TOWERS.push_back(trump_tower); 
     }
     }
   }
