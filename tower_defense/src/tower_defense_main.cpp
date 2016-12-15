@@ -580,6 +580,8 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
 	    Vector3f g = GOAL;
 	    vector<Vector3f> pathTree = MakePath(possibleLocations, s, g);
 	    PATH = MakePath(pathTree, g, s);
+      start_cloud_publisher_.publish(start_cloud);
+    end_cloud_publisher_.publish(end_cloud);
 	}
 	ground_cloud.points.resize(PATH.size());
 	for(size_t i = 0; i < PATH.size(); i++){
@@ -588,8 +590,7 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
     // ground_cloud.points[p.points.size()-2] = (ConvertVectorToPoint(START));
     // ground_cloud.points[p.points.size()-1] = (ConvertVectorToPoint(GOAL));
     filtered_point_cloud_publisher_.publish(ground_cloud);
-    start_cloud_publisher_.publish(start_cloud);
-    end_cloud_publisher_.publish(end_cloud);
+    
     //end_cloud_publisher_.publish();
     point_cloud_publisher_.publish(publish_cloud);
       /*printf("XYZ:%f,%f,%f RGB:%f,%f,%f \n", 
