@@ -785,7 +785,7 @@ void gameMap(){
         Vector3f color(0,0,0);
         towercloud.colors.push_back(color);
       }
-      if(height < GOAL_H && height > 0){
+      if(height < GOAL_H && height > 0.001){
         //RGB.x() = red, .y() = Green, .z() = blue
         Vector3f rgb = p.colors[i];
 
@@ -841,8 +841,8 @@ void gameMap(){
 
     printf("Start: %f,%f,%f\n", startPoint.x(), startPoint.y(), startPoint.z());
     printf("Goal: %f,%f,%f\n", goalPoint.x(), goalPoint.y(), goalPoint.z());
-    START = goalPoint;
-    GOAL = startPoint;
+    START = startPoint;
+    GOAL = goalPoint;
 
     //Pass the tower cloud and the minimum number of points to make up a tower
     towerFind(towercloud, 100, .05);
@@ -1094,7 +1094,7 @@ int main(int argc, char **argv) {
   }
   //Seed Random number generator
   srand(time(NULL));
-  
+
   ros::init(argc, argv, "camera_rgb_optical_frame");
   ros::NodeHandle n;
 
