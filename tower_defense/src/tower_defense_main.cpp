@@ -390,7 +390,7 @@ Vector3f GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoa
 
     float chance = .7;
     if(goaltostart){
-      chance = .95;
+      chance = .98;
     }
 
 	  if(random < chance){
@@ -934,13 +934,21 @@ void PlayGameCallBack(const std_msgs::Float32& total_creeps){
       PATH = bestPath;
       if(PATH.size() < 50){
         MAKEPATH = false;
-        
+        /*
         tower trump_tower; 
         Vector3f g(-.023,.3,1);
         trump_tower.location = g;
         trump_tower.damage = 1;
         trump_tower.range = .2;
         TOWERS.push_back(trump_tower); 
+        tower newTower; 
+        Vector3f h(-.25,.2,1);
+        newTower = trump_tower;
+        newTower.location = h;
+        newTower.damage = 3;
+        newTower.range = 1;
+        TOWERS.push_back(newTower); 
+        */
     }
     }
   }
