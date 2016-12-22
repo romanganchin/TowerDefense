@@ -23,29 +23,10 @@
 #include <pcl/point_types.h>
 #include <std_msgs/Float32.h>
 
-/*
-#include <pcl/ModelCoefficients.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/sample_consensus/method_types.h>
-#include <pcl/sample_consensus/model_types.h>
-#include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/filters/extract_indices.h>
-*/
 #include "tower_defense/ObstaclePointCloudSrv.h"
 #include "tower_defense/HurtCreeperSrv.h"
 #include "tower_defense/MoveCreepersSrv.h"
 #include "tower_defense/MakePathSrv.h"
-// #include "tower_defense/CheckExtensionSrv.h"
-// #include "tower_defense/BuildRRTSrv.h"
-// #include "tower_defense/RRTPlanSrv.h"
-
-// using tower_defense::RandomConfigSrv;
-// using tower_defense::ExtendNodeSrv;
-// using tower_defense::CheckExtensionSrv;
-// using tower_defense::BuildRRTSrv;
-// using tower_defense::RRTPlanSrv;
-// using tower_defense::RRTNode;
 
 using Eigen::Matrix3f;
 using Eigen::Vector3f;
@@ -107,13 +88,6 @@ float WALL_H = .14;
 //Tower height (maximum height of towers)
 float TOWER_H = .25;
 
-//camera intrinsics
-float fx = 588.446;
-float fy = -564.227;
-float px = 320;
-float py = 240;
-float a = 3.008;
-float b = -0.002745;
 bool _make_path_check = true;
 
 //////////////////////////////////////////////////
@@ -349,13 +323,6 @@ edge hurtClosestCreep(tower currentTower){
 	    edge.vertexB = PATH[HORDE[creep_in].location];
 
 	    if(HORDE[creep_in].health <= 0){
-	      // vector<creep> temp;
-	      // for(size_t i = 0; i < HORDE.size(); i++){
-	      //   if(i != creep_in){
-	      //     temp.push_back(HORDE[i]);
-	      //   }
-	      // }
-	      // HORDE = temp;
 	      HORDE.erase(HORDE.begin() + creep_in);
 	    }
 	  }
@@ -372,9 +339,13 @@ vector<Vector3f> GetPointsToConsider(Vector3f current, vector<Vector3f> possible
 			pointsToConsider.push_back(possibleLocations[i]);
 		}
 	}
-	//printf("got to the points to consider\n");
 	return pointsToConsider;
 }
+
+/*
+* Gets the point in the current radius that is closest to the "goal", goal heavily weighted towards actual goal even
+* more heavily weighted on the second pass since we know that we cannot get stuck in a situation where we think we are really close to a goal but actually encounter a wall
+*/
 Vector3f GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoal, bool goaltostart){
 	//print points to Consider should be radius + already seen points
 	sensor_msgs::PointCloud my_points_cloud;
@@ -419,6 +390,10 @@ Vector3f GetPointClosestToGoal(vector<Vector3f> pointsToConsider, Vector3f myGoa
   	return c;
 }
 
+/*
+* Makes a path from a start location a goal location and we give a boolean just to know if this is our first time making the path or the second just for the weights 
+* of setting the goal
+*/
 vector<Vector3f> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector3f g, bool goaltostart){
 	
 	printf("making path \n");
@@ -438,7 +413,7 @@ vector<Vector3f> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector
 	// int currentRadiusSize = 0;
 	while(not_reached_goal  && counter < 10000){
 		//get all points within a certain radius of the current location that are valid points
-		int radiusCounter = 0;
+		//int radiusCounter = 0;
 		pointsToConsider = GetPointsToConsider(current, possibleLocations, distance);
 		for(size_t i = 0; i < pointsOnPath.size(); i++){
 			pointsToConsider.push_back(pointsOnPath[i]);
@@ -446,7 +421,7 @@ vector<Vector3f> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector
 		//currentRadiusSize = pointsToConsider.size();
 		current = GetPointClosestToGoal(pointsToConsider, g, goaltostart);
 		/*
-		Uncomment for radius checking
+		Uncomment for radius checking should uncomment once passed a better filtered possible locations vector
 		*/
 		// while(fabs(radiusSize-currentRadiusSize)>50 && radiusCounter < 50){
 		// 	radiusPoints = GetPointsToConsider(current, possibleLocations, distance);
@@ -467,9 +442,7 @@ vector<Vector3f> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector
         counter++;
 	}
 	printf("disance between goal and start %f \n", distanceBetweenTwoPoints(g, current));
-	printf("got to the publisher\n");
-	printf("got to the publisher\n");
-		
+	printf("got to the publisher\n");	
     sensor_msgs::PointCloud my_path_cloud;
     my_path_cloud.header.frame_id = "camera_rgb_optical_frame";
     my_path_cloud.points.resize(pointsOnPath.size());
@@ -479,9 +452,12 @@ vector<Vector3f> MakePath(vector<Vector3f> possibleLocations, Vector3f s, Vector
     my_path_publisher_.publish(my_path_cloud);
 	return pointsOnPath;
 }
+
+/*
+* Loops through all the towers and finds the closest creep for each tower and does damage accordingly
+*/
 bool TowerAI(){
     bool victory = false;
-
     MarkerArray markers;
      markers.markers.clear();
      plan_marker_ = edges_marker_;
@@ -489,25 +465,21 @@ bool TowerAI(){
     creep tempCreep;
     for(size_t i = 0; i < towers.size(); i++){
       edge line = hurtClosestCreep(towers[i]);
-      //printf("%f, %f\n", line.vertexB.x(), line.vertexB.y());
       if(line.vertexA.x() != -9){
         DrawLine(line.vertexA, line.vertexB, &plan_marker_);
         markers.markers.push_back(plan_marker_);
       }
-    //tempCreep = getClosestCreep(towers[i]);
-    //tempCreep.damageTaken = towers[i].damage;
-    //sendToHurtCreeperService.push_back(tempCreep);
   }
   if(HORDE.size() <= 0){
     victory = true;
   }
-
-  
     markers_publisher_.publish(markers);
-
   return victory;
 }
 
+/*
+* Loops through a list of points and finds which one occurs the most otherwise stated the mode, used to find the ground plane
+*/
 //Determines the mode of the z coordinates for the SUPERPOINTCLOUD
 float maxOccuringValue(){
   printf("finding max value\n");
@@ -518,22 +490,22 @@ float maxOccuringValue(){
   for(size_t i = 0; i < pp.points.size(); i+=10){
     //printf("Z:%f", p.points[i].z());
     if(isnan(pp.points[i].z()) == 0){
-    for(size_t j = 0; j < pp.points.size(); j+= 5){
-      if(pp.points[j].z()<=pp.points[i].z()+.1 || pp.points[j].z() >=pp.points[i].z()-.1){
-        currentCount++;
-      }
-    }
-    if(currentCount > maxCount){
-      maxCount = currentCount;
-      location = pp.points[i].z();
-    }
-    }
-    //printf("\nx %f  weight %f\n",_particles[i].x, _particles[i].weight);  
+	    for(size_t j = 0; j < pp.points.size(); j+= 5){
+	      if(pp.points[j].z()<=pp.points[i].z()+.1 || pp.points[j].z() >=pp.points[i].z()-.1){
+	        currentCount++;
+	      }
+	    }
+	    if(currentCount > maxCount){
+	      maxCount = currentCount;
+	      location = pp.points[i].z();
+	    }
+    } 
   }
   printf("maxCount ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^%f\n", maxCount);
   printf("location ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^%f\n", location);
   return location;
 }
+
 //Takes the PointCloud2 from the Kinect, converts it into PointCloud<pcl::PointXYZRGB>
 //Takes this point cloud and store the locations and colors into a SUPERPOINTCLOUD
 //Filters the ground plane out of the SUPERPOINTCLOUD
@@ -614,13 +586,13 @@ void KinectCallback(const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZR
     	
 	    possibleLocations.push_back(START);
 	    possibleLocations.push_back(GOAL);
-      POSSIBLE = possibleLocations;
+        POSSIBLE = possibleLocations;
 
 	    Vector3f s = START;
 	    Vector3f g = GOAL;
 	   
-      start_cloud_publisher_.publish(start_cloud);
-    end_cloud_publisher_.publish(end_cloud);
+        start_cloud_publisher_.publish(start_cloud);
+        end_cloud_publisher_.publish(end_cloud);
 	}
 	ground_cloud.points.resize(PATH.size());
 	for(size_t i = 0; i < PATH.size(); i++){
